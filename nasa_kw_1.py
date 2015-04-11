@@ -9,12 +9,11 @@ from sumy.nlp.stemmers import Stemmer
 from sumy.utils import get_stop_words
 
 
-
 if __name__ == '__main__':
     data = json.load(open('data/nasa.json'))
     dataset = data['dataset']
 
-    print len(dataset)
+    print len(dataset), 'datasets'
 
     tokenizer = TreebankWordTokenizer()
     desc = [tokenizer.tokenize(d['description']) for d in dataset]
