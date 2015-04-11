@@ -19,29 +19,13 @@ if __name__ == '__main__':
     # tokenize description fields
     print 'Tokenizing descriptions'
     desc = []
-    for ds in dataset:
+    doc_id = []
+    for i, ds in enumerate(dataset):
         text = TextBlob(ds['description'])
         for sentence in text.sentences:
             desc.append(sentence.tokens)
+            doc_id.append(i)
 
     print 'Constructing bigrams'
     desc_bigrams = Phrases(desc)
     bigrams = desc_bigrams[desc]
-
-    # tokenizer = TreebankWordTokenizer()
-    # desc = [tokenizer.tokenize(d['description']) for d in dataset]
-    #
-    # # collocations
-    # desc_bigrams = Phrases(desc)
-    # desc_trigrams = Phrases(desc_bigrams[desc])
-    #
-    # bigrams = desc_bigrams[desc]
-    # trigrams = desc_trigrams[bigrams]
-    #
-    # # textrank
-    # stemmer = Stemmer('english')
-    # summarizer = Summarizer(stemmer)
-    # summarizer.stop_words = get_stop_words('english')
-    # tokenizer2 = Tokenizer('english')
-    #
-    # parser = PlaintextParser(dataset[0]['description'], tokenizer2)
