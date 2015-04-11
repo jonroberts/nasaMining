@@ -5,10 +5,11 @@ from math import log
 
 # generate a list of frequency counts for keyword pairs, sorted in reverse order by total
 if __name__ == '__main__':
-    data = json.load(open('data/nasa_kw.json'))
-    kw_field = 'keyword'
+    data = json.load(open('data/nasa_ngram_np.json'))
+#     kw_field = 'keyword'
 #     kw_field = 'description_textrank_kw'
 #     kw_field = 'description_bigram_kw'
+    kw_field = 'gensim_ngram_np'
     dataset = data['dataset']
     keyholder = {}
     outdata = []
@@ -61,7 +62,7 @@ if __name__ == '__main__':
             kpmi = log((cAB * len(single_words)) / (cA * cB), 10) / -1 * log(cAB / len(single_words), 10)
         outdata.append({'keyword': keyholder[pair], 'count': cAB, 'a': cA, 'b': cB, 'pmi_doc': dpmi, 'pmi_kw': kpmi})
         
-    with open('data/keyword_pair_freq.json', 'w') as f:
+    with open('data/nasa_np_strengths.json', 'w') as f:
         json.dump(outdata, f)
         
     print 'done'
