@@ -1,14 +1,10 @@
 from __future__ import unicode_literals
 import json
-from nltk.tokenize.treebank import TreebankWordTokenizer
 from gensim.models.phrases import Phrases
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.text_rank import TextRankSummarizer as Summarizer
-from sumy.nlp.stemmers import Stemmer
-from sumy.utils import get_stop_words
 from textblob import TextBlob
 
+
+bigram_thresh = 10
 
 if __name__ == '__main__':
     data = json.load(open('data/nasa.json'))
@@ -27,5 +23,20 @@ if __name__ == '__main__':
             doc_id.append(i)
 
     print 'Constructing bigrams'
-    desc_bigrams = Phrases(desc)
+    desc_bigrams = Phrases(desc, threshold=bigram_thresh)
     bigrams = desc_bigrams[desc]
+
+    # pull out bigram keywords
+    for i, bigram in enumerate(bigrams):
+        doc = doc_id[i]
+
+        if 'gensim_bigram_kw' not in dataset[doc]:
+            dataset[doc]['gensim_bigram_kw'] = list()
+
+        for kw in filter(lambda k: '_' in k, bigram):
+            dataset[doc]['gensim_bigram_kw'].append(kw.split('_'))
+
+    # update the original data json and save
+    data['dataset'] = dataset
+    with open('data/nasa_bigram.json', 'w') as f:
+        json.dump(data, f)
