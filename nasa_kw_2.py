@@ -4,6 +4,8 @@ from gensim.models.phrases import Phrases
 from textblob import TextBlob
 
 
+# from gensim: threshold represents a threshold for forming the phrases (higher means fewer phrases).
+# A phrase of words a and b is accepted if (cnt(a, b) - min_count) * N / (cnt(a) * cnt(b)) > threshold, where N is the total vocabulary size.
 bigram_thresh = 10
 
 if __name__ == '__main__':
@@ -31,10 +33,20 @@ if __name__ == '__main__':
         doc = doc_id[i]
 
         if 'gensim_bigram_kw' not in dataset[doc]:
-            dataset[doc]['gensim_bigram_kw'] = list()
+            dataset[doc]['gensim_bigram_kw'] = set()
 
         for kw in filter(lambda k: '_' in k, bigram):
-            dataset[doc]['gensim_bigram_kw'].append(kw.split('_'))
+            keyword = kw.replace('_', ' ').lower()
+
+            # filter out punctuation, etc (make sure that there are two non-punc words)
+            if len(TextBlob(keyword).words) != 2:
+                continue
+
+            dataset[doc]['gensim_bigram_kw'].add(kw.replace('_', ' ').lower())
+
+    # convert set into list for json serialization
+    for d in dataset:
+        d['gensim_bigram_kw'] = list(d['gensim_bigram_kw'])
 
     # update the original data json and save
     data['dataset'] = dataset
