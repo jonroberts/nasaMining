@@ -100,7 +100,13 @@ if __name__ == '__main__':
         for i, np in enumerate(d[field]):
             if np.endswith(" 's"):
                 np = np[:-3]
-            d[field][i] = np.replace(" 's", "'s")
+
+            if np.startswith("'s "):
+                np = np.replace("'s ", "", 1)
+
+            np = np.replace(" 's", "'s")
+
+            d[field][i] = np
         d[field] = list(set(d[field]))
 
     with open('data/states_ngram_np.json', 'w') as f:
