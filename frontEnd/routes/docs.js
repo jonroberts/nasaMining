@@ -12,7 +12,7 @@ exports.getDatasets = function (req,res){
 	var theQuery={};
 	theQuery[field]=query;
 	console.log(theQuery);
-	var theFields={'title':1,'description':1,'landingPage':1,'publisher.name':1,'distribution':1};
+	var theFields={'title':1,'issued':1,'identifier':1,'keyword':1,'description_ngram_np':1,'title_ngram_np':1,'description':1,'landingPage':1,'publisher.name':1,'distribution':1};
 	if (query==undefined) res.send({'error':'you must pass in a query, of form q='})
 	else{
 		db.datasets.find(theQuery,theFields,function(err,docs){
