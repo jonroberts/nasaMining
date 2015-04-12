@@ -175,6 +175,7 @@
                                                     drawKWGraph(data[d].keyword);
                                                 });
                                                 $('#_'+data[d].identifier).append(dataset);
+												
 												if(data[d].landingPage!=undefined){
 													var docs=$(' <a href="'+data[d].landingPage+'" target=_blank>&#10150;</a><span> </span>');
 													$('#_'+data[d].identifier).append(docs);
