@@ -60,8 +60,6 @@ exports.getEdges = function(req,res){
 	})
 }
 
-<<<<<<< HEAD
-
 exports.getCoOccuringKWs = function(req,res){
 	var query=req.query.q;
 	console.log(query);
