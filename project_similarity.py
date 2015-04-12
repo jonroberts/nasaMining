@@ -6,6 +6,7 @@ if __name__ == '__main__':
     data = json.load(open('data/nasa_kw.json'))
     outfile = 'data/keyword_synset_scores.json'
     kw_field = 'keyword'
+    max_items = 40000 # limit keyword pairs to analyse. there are ~1100 projects, that's ~640000 pairs!
     dataset = data['dataset']
     similarity = []
     single_words = []
@@ -15,7 +16,7 @@ if __name__ == '__main__':
         for keyword in ds[kw_field]:
             for one_word in keyword.lower().split():
                 if one_word not in single_words:
-                    single_words.append(sl_word)
+                    single_words.append(one_word)
 
     # create a matrix of all similarity scores
     #
@@ -27,7 +28,7 @@ if __name__ == '__main__':
     #
     # 1134 words have 642411 unique pairs
     count = 0
-    for pair in combinations(single_words, 2):
+    for pair in list(combinations(single_words, 2))[:max_items]:
         key = str(sorted(pair, key=unicode.lower))
         if key not in similarity:
             score = 0.0
@@ -39,7 +40,7 @@ if __name__ == '__main__':
             count += 1
     
     with open(outfile, 'w') as f:
-        json.dump(outdata, f)
+        json.dump(similarity, f)
         
     print 'done'
     # calculate a score for each pair of projects in the dataset
