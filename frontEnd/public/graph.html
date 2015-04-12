@@ -11,9 +11,9 @@ body{
 .node {
   stroke: #fff;
   stroke-width: 1px;
-	-webkit-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);
--moz-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);
-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);
+	/*-webkit-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
+/*-moz-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
+/*box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
 }
 
 .link {
@@ -41,10 +41,27 @@ var force = d3.layout.force()
     .linkDistance(170)
     .size([width, height]);
 
+var zoom = d3.behavior.zoom()
+        .scaleExtent([.1, 10])
+        .on("zoom", zoomed);
+
 var svg = d3.select("#theGraphContainer").append("svg")
 	.attr('id','theGraph')
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+		.call(zoom);
+
+var rect = svg.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all");
+
+var zTranslate = zoom.translate();
+
+function zoomed() {
+	svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
 
 function getGraph(){
 	$('#theGraph').empty()
