@@ -1,7 +1,7 @@
 var mongojs = require("mongojs")({});
 var db = require("mongojs")
 		.connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
-		['datasets']);
+		['datasets','kw_pair_freq']);
 
 exports.getDatasets = function (req,res){
 	var query=req.query.q;
@@ -18,6 +18,40 @@ exports.getDatasets = function (req,res){
 		})
 	}
 }
+
+exports.getEdges = function(req,res){
+	var keywords=JSON.parse(req.query.kws);
+	console.log(keywords);
+	console.log(keywords.length);
+	
+	var threshold=(req.query.threshold==undefined)?10:req.query.threshold;
+	db.kw_pair_freq.find({'keyword':{"$in":keywords}},{'_id':0},function(err,docs){
+		var names=[];
+		var nameDict={};
+		var counter=0;
+		var edges=[];
+		for(var dx in docs){
+			var d=docs[dx];
+			if(d['count']<threshold) continue;
+
+			var t1=d['keyword'][0];
+			var t2=d['keyword'][1];
+			if(nameDict[t1]==undefined){
+				nameDict[t1]=counter;
+				counter+=1;
+				names.push({'name':t1});
+			}
+			if(nameDict[t2]==undefined){
+				nameDict[t2]=counter;
+				counter+=1;
+				names.push({'name':t2});
+			}
+			edges.push({'source':nameDict[t1],'target':nameDict[t2],'value':d['count']});
+		}
+		res.send({'nodes':names,'links':edges});
+	})
+}
+
 
 exports.getCoOccuringKWs = function(req,res){
 	var query=req.query.q;
@@ -78,3 +112,7 @@ exports.getCoOccuringKWs = function(req,res){
 	}
 	
 }
+
+
+
+
