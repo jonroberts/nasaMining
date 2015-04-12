@@ -1,7 +1,8 @@
 var mongojs = require("mongojs")({});
 var db = require("mongojs")
-		.connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
-		['datasets','kw_pair_freq']);
+    .connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
+    ['datasets', 'kw_pair_freq']);
+
 
 exports.getDatasets = function (req,res){
 	var query=req.query.q;
@@ -59,6 +60,7 @@ exports.getEdges = function(req,res){
 	})
 }
 
+<<<<<<< HEAD
 
 exports.getCoOccuringKWs = function(req,res){
 	var query=req.query.q;
@@ -101,7 +103,7 @@ exports.getCoOccuringKWs = function(req,res){
 				  	}
 				  	
 	var theQuery={'key':{},
-				  'cond':{},
+			      'cond': {"source": "http://data.nasa.gov/data.json"},
 				  'reduce':searches[field],
 				  'initial':{}
 				 };
@@ -124,6 +126,68 @@ exports.getCoOccuringKWs = function(req,res){
 	
 }
 
+exports.getCoOccuringKWsMulti = function (req, res) {
+    var keywords = JSON.parse(req.query.kws);
+    var using = req.query.field;
+    var field = (using == undefined) ? 'keyword' : using;
+    var searches = {
+        'keyword': function (curr, result) {
+            for (var kx in curr['keyword']) {
+                var kw = curr['keyword'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        },
+        'description_textrank_kw': function (curr, result) {
+            for (var kx in curr['description_textrank_kw']) {
+                var kw = curr['description_textrank_kw'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        },
+        'description_bigram_kw': function (curr, result) {
+            for (var kx in curr['description_bigram_kw']) {
+                var kw = curr['description_bigram_kw'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        }
+    };
 
+    var theQuery = {
+        'key': {},
+        'cond': {"source": "http://data.nasa.gov/data.json"},
+        'reduce': searches[field],
+        'initial': {}
+    };
+    theQuery['cond'][field] = {"$in": keywords};
 
+    if (keywords == undefined) res.send({'error': 'you must pass in a query, of form q='});
+    else {
+        db.datasets.group(theQuery, function (err, docs) {
+            var values = docs[0];
+            var results = [];
+            for (var k in values) {
+                results.push({'kw': k, 'count': values[k]});
+            }
+            results.sort(function (a, b) {
+                return +b.count - a.count;
+            });
 
+            res.send(results);
+        })
+    }
+
+};

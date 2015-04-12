@@ -12,6 +12,8 @@ states = [
     'West Virginia', 'Wisconsin', 'Wyoming'
 ]
 
+abbr = ['ca', 'wv']
+
 
 if __name__ == '__main__':
     for state in states:
@@ -22,27 +24,42 @@ if __name__ == '__main__':
         try:
             res = requests.get(url)
 
-            if res.status_code == 200:
-                data = res.json()
+            data = res.json()
 
-                with open('data/%s.json' % s, 'w') as f:
-                    json.dump(data, f)
+            print "'%s': '%s'," % (s, url)
+
+            with open('data/%s.json' % s, 'w') as f:
+                json.dump(data, f)
         except:
             print '\tError'
 
-            if ' ' in state:
-                s = ''.join([s_[0] for s_ in state.split()]).lower()
-                url = 'http://data.%s.gov/data.json' % s
-                print '\tTrying %s' % url
+            url = 'http://www.%s.gov/data.json' % s
+            print url
+            try:
+                res = requests.get(url)
 
-                try:
-                    res = requests.get(url)
+                data = res.json()
 
-                    if res.status_code == 200:
+                print "'%s': '%s'," % (s, url)
+
+                with open('data/%s.json' % s, 'w') as f:
+                    json.dump(data, f)
+            except:
+                print '\tError'
+
+                if ' ' in state:
+                    s = ''.join([s_[0] for s_ in state.split()]).lower()
+                    url = 'http://data.%s.gov/data.json' % s
+                    print url
+
+                    try:
+                        res = requests.get(url)
                         data = res.json()
+
+                        print "'%s': '%s'," % (s, url)
 
                         with open('data/%s.json' % s, 'w') as f:
                             json.dump(data, f)
-                except:
-                    print '\tError'
-                    pass
+                    except:
+                        print '\tError'
+                        pass
