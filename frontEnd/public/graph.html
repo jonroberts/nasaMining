@@ -1,79 +1,339 @@
 <!DOCTYPE html>
+<html>
+<head>
+<title>SpaceTag!</title>
 <meta charset="utf-8">
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
 <style>
-body{
-	background:-webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
-	height: 900px;
-}
+    body {
+        background: -webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
+        background: -moz-linear-gradient(top, #00000c 0%, #0c1a3a 100%);
+        background: linear-gradient(to bottom, #00000c 0%, #0c1a3a 100%);
+        height: 900px;
+    }
 
-.node {
-  stroke: #fff;
-  stroke-width: 1px;
-}
+    .node {
+        stroke: #fff;
+        stroke-width: 1px;
+        /*-webkit-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
+        /*-moz-box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
+        /*box-shadow: 0px 0px 15px 5px rgba(255, 255, 190, .75);*/
+    }
 
-.link {
-  stroke: #999;
-  stroke-opacity: .2;
-}
+    .link {
+        stroke: #fff;
+        stroke-opacity: .5;
+    }
+
+    .ui-dialog {
+        opacity: 0.85;
+        overflow: scroll;
+        padding-top: 10px
+    }
+
+    .ui-dialog-titlebar {
+        opacity: 1;
+    }
+
+    #dialog p {
+        font-size: 14px;
+    }
+
+    #dialog p div {
+        cursor: pointer;
+    }
 
 </style>
+</head>
 <body>
+<input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
+<button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
+<div id='theGraphContainer'>
+</div>
+
+<div id="dialog" title="" style="display:none">
+    <p></p>
+</div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
 <script>
+    $("#dialog").dialog({
+        autoOpen: false,
+        position: { my: "right top", at: "right top"},
+        width: '35%',
+        height: 600
+//        width: '35%',
+//        buttons: {
+//            Close: function () {
+//                $(this).dialog("close");
+//            }
+//        }
+//      show: {
+//        effect: "blind",
+//        duration: 100
+//      }
+    });
 
-var width = 960,
-    height = 500;
+    var width = 1200,
+            height = 700;
 
-var color = d3.scale.category20();
+    var color = d3.scale.category20();
 
-var force = d3.layout.force()
-    .charge(-240)
-    .linkDistance(100)
-    .size([width, height]);
+    var force = d3.layout.force()
+            .charge(-240)
+            .linkDistance(170)
+            .size([width, height]);
 
-var svg = d3.select("body").append("svg")
-    .attr("width", width)
-    .attr("height", height);
+    var zoom = d3.behavior.zoom()
+            .scaleExtent([.1, 10])
+            .on("zoom", zoomed);
 
-var query='["project","active","jet propulsion laboratory"]'
-$.ajax({
-	url:'getEdges',
-	data:{'kws':query},
-	success:function(data){
-		console.log(data);
-		var graph=data;
-	  force
-	      .nodes(graph.nodes)
-	      .links(graph.links)
-	      .start();
-	
-	  var link = svg.selectAll(".link")
-	      .data(graph.links)
-	    .enter().append("line")
-	      .attr("class", "link")
-	      .style("stroke-width", function(d) { return Math.sqrt(d.value/100); });
-	
-	  var node = svg.selectAll(".node")
-	      .data(graph.nodes)
-	    .enter().append("circle")
-	      .attr("class", "node")
-	      .attr("r", 5)
-	      .style("fill", function(d) { return color(d.group); })
-	      .call(force.drag);
-	
-	  node.append("title")
-	      .text(function(d) { return d.name; });
-	
-	  force.on("tick", function() {
-	    link.attr("x1", function(d) { return d.source.x; })
-	        .attr("y1", function(d) { return d.source.y; })
-	        .attr("x2", function(d) { return d.target.x; })
-	        .attr("y2", function(d) { return d.target.y; });
-	
-	    node.attr("cx", function(d) { return d.x; })
-	        .attr("cy", function(d) { return d.y; });
-	  });		
-	}
-})
+    var svg = d3.select("#theGraphContainer").append("svg")
+            .attr('id', 'theGraph')
+            .attr("width", width)
+            .attr("height", height)
+            .call(zoom);
+
+    var rect = svg.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .style("fill", "none")
+            .style("pointer-events", "all");
+
+    var zTranslate = zoom.translate();
+
+    function zoomed() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    }
+
+    function getGraph() {
+        var query = $('#kwSearch').val();
+        drawGraph(query);
+    }
+
+    function drawGraph(query) {
+        $('#theGraph').empty();
+        $.ajax({
+            url: 'getCoOccuringKWs',
+            data: {'q': query, 'field': 'keyword'},
+            success: function (data) {
+                console.log(data.length);
+                var keywords = [];
+                var thresh = data[0].count / 2.;
+                for (var ix in data) {
+                    if (data[ix].count < thresh) break;
+                    keywords.push(data[ix].kw.toLowerCase());
+                }
+
+                var cluster = '["' + keywords.join('","') + '"]';
+                console.log(cluster);
+
+                $.ajax({
+                    url: 'getEdges',
+                    data: {'kws': cluster, 'field': 'keyword', 'threshold': -0.9},
+                    success: function (data) {
+                        console.log(data);
+                        var graph = data;
+                        force
+                                .nodes(graph.nodes)
+                                .links(graph.links)
+                                .start();
+
+                        var link = svg.selectAll(".link")
+                                .data(graph.links)
+                                .enter().append("line")
+                                .attr("class", "link")
+                                .style("stroke-width", function (d) {
+                                    return d.value;
+                                });
+
+                        var node = svg.selectAll(".node")
+                                .data(graph.nodes)
+                                .enter().append("circle")
+                                .attr("class", "node")
+                                .attr("r", function (d) {
+                                    return Math.log(d.num);
+                                })
+                                .style("fill", 'steelblue')
+                                .call(force.drag)
+                                .on("click", function (d) {
+                                    $("#dialog").dialog("option", "title", d.name);
+                                    var dialog_body = $("#dialog p").empty();
+                                    $.ajax({
+                                        url: 'getDatasets',
+                                        data: {'q': d.name},
+                                        success: function (data) {
+                                            var dialog_body = $("#dialog p");
+                                            for (var d in data) {
+                                            	//console.log(data[d]);
+												var dsLine=$('<div id="_'+data[d].identifier+'"></div>')
+                                                dialog_body.append(dsLine);
+                                                var dataset = $("<span id='t_"+data[d].identifier+"'>\
+                                                					"+ data[d].title + " </span>");
+                                                dataset.click(function() {
+                                                    drawKWGraph(data[d].keyword);
+                                                });
+                                                $('#_'+data[d].identifier).append(dataset);
+												if(data[d].landingPage!=undefined){
+													var docs=$(' <a href="'+data[d].landingPage+'" target=_blank>&#10150;</a><span> </span>');
+													$('#_'+data[d].identifier).append(docs);
+												}
+												if(data[d].distribution!=undefined){
+													console.log('found dist')
+													if(data[d].distribution[0].downloadURL!=undefined){
+														console.log('found download URL')
+														var download = $(' <a href="'
+																			+data[d].distribution[0].downloadURL
+																			+'" target=_blank>&#9660;</a>');
+														$('#_'+data[d].identifier).append(download);
+													}
+												}
+                                            }
+                                            $("#dialog").dialog("open");
+                                        }
+                                    })
+                                })
+                                .on("dblclick", function (d) {
+                                    drawGraph(d.name)
+                                });
+
+                        node.append("title")
+                                .text(function (d) {
+                                    return d.name;
+                                });
+
+                        force.on("tick", function () {
+                            link.attr("x1", function (d) {
+                                return d.source.x;
+                            })
+                                    .attr("y1", function (d) {
+                                        return d.source.y;
+                                    })
+                                    .attr("x2", function (d) {
+                                        return d.target.x;
+                                    })
+                                    .attr("y2", function (d) {
+                                        return d.target.y;
+                                    });
+
+                            node.attr("cx", function (d) {
+                                return d.x;
+                            })
+                                    .attr("cy", function (d) {
+                                        return d.y;
+                                    });
+                        });
+                    }
+                })
+            }
+        });
+
+    }
+
+    function drawKWGraph(keywords) {
+		console.log(keywords);
+        console.log(JSON.stringify(keywords));
+        $('#theGraph').empty();
+        $.ajax({
+            url: 'getCoOccuringKWsMulti',
+            data: {'kws': JSON.stringify(keywords), 'field': 'keyword'},
+            success: function (data) {
+                console.log(data.length);
+                var keywords = [];
+                var thresh = data[0].count / 2.;
+                for (var ix in data) {
+                    if (data[ix].count < thresh) break;
+                    keywords.push(data[ix].kw.toLowerCase());
+                }
+
+                var cluster = '["' + keywords.join('","') + '"]';
+                console.log(cluster);
+
+                $.ajax({
+                    url: 'getEdges',
+                    data: {'kws': cluster, 'field': 'keyword', 'threshold': -0.9},
+                    success: function (data) {
+                        console.log(data);
+                        var graph = data;
+                        force
+                                .nodes(graph.nodes)
+                                .links(graph.links)
+                                .start();
+
+                        var link = svg.selectAll(".link")
+                                .data(graph.links)
+                                .enter().append("line")
+                                .attr("class", "link")
+                                .style("stroke-width", function (d) {
+                                    return d.value;
+                                });
+
+                        var node = svg.selectAll(".node")
+                                .data(graph.nodes)
+                                .enter().append("circle")
+                                .attr("class", "node")
+                                .attr("r", function (d) {
+                                    return Math.log(d.num);
+                                })
+                                .style("fill", 'olive')
+                                .call(force.drag)
+                                .on("click", function (d) {
+                                    $("#dialog").dialog("option", "title", d.name);
+                                    $.ajax({
+                                        url: 'getDatasets',
+                                        data: {'q': d.name},
+                                        success: function (data) {
+                                            var dialog_body = $("#dialog p");
+                                            dialog_body.empty();
+                                            for (var d in data) {
+                                                var dataset = $("<div id='"+data[d].identifier+"'>"+ data[d].title + "</div>");
+                                                var kwds = JSON.stringify(data[d].keyword);
+                                                dialog_body.append(dataset);
+                                            }
+                                            $("#dialog").dialog("open");
+                                        }
+                                    })
+                                })
+                                .on("dblclick", function (d) {
+                                    drawGraph(d.name)
+                                });
+
+                        node.append("title")
+                                .text(function (d) {
+                                    return d.name;
+                                });
+
+                        force.on("tick", function () {
+                            link.attr("x1", function (d) {
+                                return d.source.x;
+                            })
+                                    .attr("y1", function (d) {
+                                        return d.source.y;
+                                    })
+                                    .attr("x2", function (d) {
+                                        return d.target.x;
+                                    })
+                                    .attr("y2", function (d) {
+                                        return d.target.y;
+                                    });
+
+                            node.attr("cx", function (d) {
+                                return d.x;
+                            })
+                                    .attr("cy", function (d) {
+                                        return d.y;
+                                    });
+                        });
+                    }
+                })
+            }
+        });
+
+    }
+
+
+
 </script>
+</body>
+</html>
