@@ -51,7 +51,7 @@ if __name__ == '__main__':
     # pull out keywords
     print 'Extracting keywords'
 
-    field = 'gensim_ngram_np'
+    field = 'description_ngram_np'
 
     for i, ngram in enumerate(fivegrams):
         doc = doc_id[i]
