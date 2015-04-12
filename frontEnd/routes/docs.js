@@ -1,115 +1,121 @@
 var mongojs = require("mongojs")({});
 var db = require("mongojs")
-		.connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
-		['datasets','kw_pair_freq']);
+    .connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
+    ['datasets', 'kw_pair_freq']);
 
-exports.getDatasets = function (req,res){
-	var query=req.query.q;
-	var using=req.query.field;
-	var field=(using==undefined)?'keyword':using;
-	console.log(field);
-	var theQuery={};
-	theQuery[field]=query;
+exports.getDatasets = function (req, res) {
+    var query = req.query.q;
+    var using = req.query.field;
+    var field = (using == undefined) ? 'keyword' : using;
+    console.log(field);
+    var theQuery = {};
+    theQuery[field] = query.toUpperCase();
 
-	if (query==undefined) res.send({'error':'you must pass in a query, of form q='})
-	else{
-		db.datasets.find(theQuery,{'title':1},function(err,docs){
-			res.send(docs);
-		})
-	}
-}
+    if (query == undefined) res.send({'error': 'you must pass in a query, of form q='})
+    else {
+        db.datasets.find(theQuery, {'title': 1}, function (err, docs) {
+            res.send(docs);
+        })
+    }
+};
 
-exports.getEdges = function(req,res){
-	var keywords=JSON.parse(req.query.kws);
-	
-	var threshold=(req.query.threshold==undefined)?-0.5:req.query.threshold;
-	db.kw_pair_freq.find({'keyword':{"$in":keywords},'count':{'$gt':1}},{'_id':0},function(err,docs){
-		var names=[];
-		var nameDict={};
-		var counter=0;
-		var edges=[];
-		for(var dx in docs){
-			var d=docs[dx];
-			if(d['pmi_doc']<threshold) continue;
+exports.getEdges = function (req, res) {
+    var keywords = JSON.parse(req.query.kws);
 
-			var t1=d['keyword'][0];
-			var t2=d['keyword'][1];
-			if(nameDict[t1]==undefined){
-				nameDict[t1]=counter;
-				counter+=1;
-				names.push({'name':t1,'num':d['a']});
-			}
-			if(nameDict[t2]==undefined){
-				nameDict[t2]=counter;
-				counter+=1;
-				names.push({'name':t2,'num':d['b']});
-			}
-			edges.push({'source':nameDict[t1],'target':nameDict[t2],'value':d['pmi_doc']+1});
-		}
-		res.send({'nodes':names,'links':edges});
-	})
-}
+    var threshold = (req.query.threshold == undefined) ? -0.5 : req.query.threshold;
+    db.kw_pair_freq.find({'keyword': {"$in": keywords}, 'count': {'$gt': 1}}, {'_id': 0}, function (err, docs) {
+        var names = [];
+        var nameDict = {};
+        var counter = 0;
+        var edges = [];
+        for (var dx in docs) {
+            var d = docs[dx];
+            if (d['pmi_doc'] < threshold) continue;
+
+            var t1 = d['keyword'][0];
+            var t2 = d['keyword'][1];
+            if (nameDict[t1] == undefined) {
+                nameDict[t1] = counter;
+                counter += 1;
+                names.push({'name': t1, 'num': d['a']});
+            }
+            if (nameDict[t2] == undefined) {
+                nameDict[t2] = counter;
+                counter += 1;
+                names.push({'name': t2, 'num': d['b']});
+            }
+            edges.push({'source': nameDict[t1], 'target': nameDict[t2], 'value': d['pmi_doc'] + 1});
+        }
+        res.send({'nodes': names, 'links': edges});
+    })
+};
 
 
-exports.getCoOccuringKWs = function(req,res){
-	var query=req.query.q;
-	var using=req.query.field;
-	var field=(using==undefined)?'keyword':using;
-	var searches={'keyword':function(curr,result){
-				  		  		for(var kx in curr['keyword']){
-				  		  			var kw=curr['keyword'][kx];
-				  		  			if(result[kw]==undefined){
-				  		  				result[kw]=1;
-				  		  			}
-				  		  			else{
-				  		  				result[kw]+=1;
-				  		  			}
-				  		  		}
-				  		  	},
-				  	'description_textrank_kw':function(curr,result){
-				  		  		for(var kx in curr['description_textrank_kw']){
-				  		  			var kw=curr['description_textrank_kw'][kx];
-				  		  			if(result[kw]==undefined){
-				  		  				result[kw]=1;
-				  		  			}
-				  		  			else{
-				  		  				result[kw]+=1;
-				  		  			}
-				  		  		}
-				  		  	},
-				  	'description_bigram_kw':function(curr,result){
-				  		  		for(var kx in curr['description_bigram_kw']){
-				  		  			var kw=curr['description_bigram_kw'][kx];
-				  		  			if(result[kw]==undefined){
-				  		  				result[kw]=1;
-				  		  			}
-				  		  			else{
-				  		  				result[kw]+=1;
-				  		  			}
-				  		  		}
-				  		  	}
-				  	}
-				  	
-	var theQuery={'key':{},
-				  'cond':{},
-				  'reduce':searches[field],
-				  'initial':{}
-				 };
-	theQuery['cond'][field]={"$regex":new RegExp('^'+query, 'i')};
+exports.getCoOccuringKWs = function (req, res) {
+    var query = req.query.q;
+    var using = req.query.field;
+    var field = (using == undefined) ? 'keyword' : using;
+    var searches = {
+        'keyword': function (curr, result) {
+            for (var kx in curr['keyword']) {
+                var kw = curr['keyword'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        },
+        'description_textrank_kw': function (curr, result) {
+            for (var kx in curr['description_textrank_kw']) {
+                var kw = curr['description_textrank_kw'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        },
+        'description_bigram_kw': function (curr, result) {
+            for (var kx in curr['description_bigram_kw']) {
+                var kw = curr['description_bigram_kw'][kx];
+                if (result[kw] == undefined) {
+                    result[kw] = 1;
+                }
+                else {
+                    result[kw] += 1;
+                }
+            }
+        }
+    };
 
-	if (query==undefined) res.send({'error':'you must pass in a query, of form q='})
-	else{
-		db.datasets.group(theQuery,function(err,docs){
-			var values=docs[0];
-			var results=[];
-			for(var k in values) {results.push({'kw':k,'count':values[k]});}
-			results.sort(function(a,b){return +b.count-a.count;});
+    var theQuery = {
+        'key': {},
+        'cond': {"source": "http://data.nasa.gov/data.json"},
+        'reduce': searches[field],
+        'initial': {}
+    };
+    theQuery['cond'][field] = {"$regex": new RegExp('^' + query, 'i')};
 
-			res.send(results);
-		})
-	}
-	
-}
+    if (query == undefined) res.send({'error': 'you must pass in a query, of form q='});
+    else {
+        db.datasets.group(theQuery, function (err, docs) {
+            var values = docs[0];
+            var results = [];
+            for (var k in values) {
+                results.push({'kw': k, 'count': values[k]});
+            }
+            results.sort(function (a, b) {
+                return +b.count - a.count;
+            });
+
+            res.send(results);
+        })
+    }
+
+};
 
 
 
