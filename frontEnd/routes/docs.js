@@ -10,19 +10,28 @@ exports.getDatasets = function (req,res){
 	console.log(field);
 	var theQuery={};
 	theQuery[field]=query;
-
+	console.log(theQuery);
+	var theFields={'title':1,'description':1,'landingPage':1,'publisher.name':1,'distribution':1};
 	if (query==undefined) res.send({'error':'you must pass in a query, of form q='})
 	else{
-		db.datasets.find(theQuery,{'title':1},function(err,docs){
-			res.send(docs);
+		db.datasets.find(theQuery,theFields,function(err,docs){
+			if(docs.length==0){
+				theQuery[field]=query.toUpperCase();
+				db.datasets.find(theQuery,theFields,function(err,docs){
+					res.send(docs);
+				})
+			}
+			else{
+				res.send(docs);
+			}
 		})
 	}
 }
 
 exports.getEdges = function(req,res){
 	var keywords=JSON.parse(req.query.kws);
-	
 	var threshold=(req.query.threshold==undefined)?-0.5:req.query.threshold;
+	console.log(keywords);
 	db.kw_pair_freq.find({'keyword':{"$in":keywords},'count':{'$gt':1}},{'_id':0},function(err,docs){
 		var names=[];
 		var nameDict={};
@@ -53,6 +62,7 @@ exports.getEdges = function(req,res){
 
 exports.getCoOccuringKWs = function(req,res){
 	var query=req.query.q;
+	console.log(query);
 	var using=req.query.field;
 	var field=(using==undefined)?'keyword':using;
 	var searches={'keyword':function(curr,result){
@@ -100,12 +110,15 @@ exports.getCoOccuringKWs = function(req,res){
 	if (query==undefined) res.send({'error':'you must pass in a query, of form q='})
 	else{
 		db.datasets.group(theQuery,function(err,docs){
-			var values=docs[0];
-			var results=[];
-			for(var k in values) {results.push({'kw':k,'count':values[k]});}
-			results.sort(function(a,b){return +b.count-a.count;});
-
-			res.send(results);
+			if(err|!docs) res.send({'error':'no documents found'});
+			else{
+				var values=docs[0];
+				var results=[];
+				for(var k in values) {results.push({'kw':k,'count':values[k]});}
+				results.sort(function(a,b){return +b.count-a.count;});
+	
+				res.send(results);
+			}
 		})
 	}
 	
