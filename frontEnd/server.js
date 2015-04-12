@@ -9,8 +9,9 @@ app.get('/', function (req, res) {
 	res.sendfile('public/index.html');
 });
 app.get('/getDatasets', docs.getDatasets);
-app.get('/getCoOccuringKWs', docs.getCoOccuringKWs)
-app.get('/getEdges', docs.getEdges)
+app.get('/getCoOccuringKWs', docs.getCoOccuringKWs);
+app.get('/getCoOccuringKWsMulti', docs.getCoOccuringKWsMulti);
+app.get('/getEdges', docs.getEdges);
 app.get(/^(.+)$/, function(req,res){
 	res.sendfile('public/' + req.params[0]);
 });

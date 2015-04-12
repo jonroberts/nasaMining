@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
 <style>
     body {
         background: -webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
@@ -23,10 +24,20 @@
 
     .ui-dialog {
         opacity: 0.85;
+        overflow: scroll;
+        padding-top: 10px
     }
 
     .ui-dialog-titlebar {
         opacity: 1;
+    }
+
+    #dialog p {
+        font-size: 14px;
+    }
+
+    #dialog p div {
+        cursor: pointer;
     }
 
 </style>
@@ -41,18 +52,19 @@
 </div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
-<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
 <script>
     $("#dialog").dialog({
         autoOpen: false,
         position: { my: "right top", at: "right top"},
-        width: '30%',
-        buttons: {
-            Close: function () {
-                $(this).dialog("close");
-            }
-        }
+        width: '35%',
+        height: 600
+//        width: '35%',
+//        buttons: {
+//            Close: function () {
+//                $(this).dialog("close");
+//            }
+//        }
 //      show: {
 //        effect: "blind",
 //        duration: 100
@@ -152,7 +164,113 @@
                                             var dialog_body = $("#dialog p");
                                             dialog_body.empty();
                                             for (var d in data) {
-                                                dialog_body.append($("<div>"+ data[d].title + "</div>"))
+                                                var dataset = $("<div id='"+data[d].identifier+"'>"+ data[d].title + "</div>");
+                                                dataset.click(function() {
+                                                    drawKWGraph(data[d].keyword);
+                                                });
+                                                dialog_body.append(dataset);
+                                            }
+                                            $("#dialog").dialog("open");
+                                        }
+                                    })
+                                })
+                                .on("dblclick", function (d) {
+                                    drawGraph(d.name)
+                                });
+
+                        node.append("title")
+                                .text(function (d) {
+                                    return d.name;
+                                });
+
+                        force.on("tick", function () {
+                            link.attr("x1", function (d) {
+                                return d.source.x;
+                            })
+                                    .attr("y1", function (d) {
+                                        return d.source.y;
+                                    })
+                                    .attr("x2", function (d) {
+                                        return d.target.x;
+                                    })
+                                    .attr("y2", function (d) {
+                                        return d.target.y;
+                                    });
+
+                            node.attr("cx", function (d) {
+                                return d.x;
+                            })
+                                    .attr("cy", function (d) {
+                                        return d.y;
+                                    });
+                        });
+                    }
+                })
+            }
+        });
+
+    }
+
+    function drawKWGraph(keywords) {
+        console.log(JSON.stringify(keywords));
+        $('#theGraph').empty();
+        $.ajax({
+            url: 'getCoOccuringKWsMulti',
+            data: {'kws': JSON.stringify(keywords), 'field': 'keyword'},
+            success: function (data) {
+                console.log(data.length);
+                var keywords = [];
+                var thresh = data[0].count / 2.;
+                for (var ix in data) {
+                    if (data[ix].count < thresh) break;
+                    keywords.push(data[ix].kw.toLowerCase());
+                }
+
+                var cluster = '["' + keywords.join('","') + '"]';
+                console.log(cluster);
+
+                $.ajax({
+                    url: 'getEdges',
+                    data: {'kws': cluster, 'field': 'keyword', 'threshold': -0.9},
+                    success: function (data) {
+                        console.log(data);
+                        var graph = data;
+                        force
+                                .nodes(graph.nodes)
+                                .links(graph.links)
+                                .start();
+
+                        var link = svg.selectAll(".link")
+                                .data(graph.links)
+                                .enter().append("line")
+                                .attr("class", "link")
+                                .style("stroke-width", function (d) {
+                                    return d.value;
+                                });
+
+                        var node = svg.selectAll(".node")
+                                .data(graph.nodes)
+                                .enter().append("circle")
+                                .attr("class", "node")
+                                .attr("r", function (d) {
+                                    return Math.log(d.num);
+                                })
+                                .style("fill", function (d) {
+                                    return color(d.group);
+                                })
+                                .call(force.drag)
+                                .on("click", function (d) {
+                                    $("#dialog").dialog("option", "title", d.name);
+                                    $.ajax({
+                                        url: 'getDatasets',
+                                        data: {'q': d.name},
+                                        success: function (data) {
+                                            var dialog_body = $("#dialog p");
+                                            dialog_body.empty();
+                                            for (var d in data) {
+                                                var dataset = $("<div id='"+data[d].identifier+"'>"+ data[d].title + "</div>");
+                                                var kwds = JSON.stringify(data[d].keyword);
+                                                dialog_body.append(dataset);
                                             }
                                             $("#dialog").dialog("open");
                                         }
