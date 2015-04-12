@@ -13,3 +13,12 @@ for d in data:
 		print counter
 	counter+=1
 	db.kw_pair_freq.insert(d)
+	
+data=json.load(open("/Users/Jon/Code/DataKind/GlobalGiving/nasaMining/data/nasa_np_strengths.json"))
+counter=0
+for d in data:
+	if counter%100==0:
+		print counter
+	counter+=1
+	db.nasa_np_strengths.insert(d)
+
