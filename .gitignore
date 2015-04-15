@@ -7,5 +7,7 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+.pydevproject
+.project
 
 ./frontEnd/node_modules*

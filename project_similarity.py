@@ -1,56 +1,47 @@
-import json
-from nltk.corpus import wordnet as wn
-from itertools import combinations
+import json, operator
+from numpy import column_stack
+from itertools import combinations, product
 
 if __name__ == '__main__':
+    sim_data = json.load(open('data/keyword_synset_scores.json'))
     data = json.load(open('data/nasa_kw.json'))
-    outfile = 'data/keyword_synset_scores.json'
-    kw_field = 'keyword'
-    max_items = 40000 # limit keyword pairs to analyse. there are ~1100 projects, that's ~640000 pairs!
+    outfile = 'data/project_similarity_scores.json'
     dataset = data['dataset']
-    similarity = []
-    single_words = []
+    kw_field = 'keyword'
+    max_items = 100000 # limit project pairs to analyse. there are ~16k projects, that's ~73 million pairs!
+    sim_scores = {}
+    proj_sims = []
 
-    # create a list of all single words among keywords
-    for i, ds in enumerate(dataset):
-        for keyword in ds[kw_field]:
-            for one_word in keyword.lower().split():
-                if one_word not in single_words:
-                    single_words.append(one_word)
-
-    # create a matrix of all similarity scores
-    #
-    # for all unique pairs of keyword words:
-    #    compare each word in the synset of the first with that of the second
-    #    keep the highest similarity score, let that be the score for those two words
-    #
-    #    0 if at least one of the words is not in WordNet
-    #
-    # 1134 words have 642411 unique pairs
-    count = 0
-    for pair in list(combinations(single_words, 2))[:max_items]:
-        key = str(sorted(pair, key=unicode.lower))
-        if key not in similarity:
-            score = 0.0
-            for word1 in wn.synsets(pair[0]):
-                for word2 in wn.synsets(pair[1]):
-                    score = max([score, word1.path_similarity(word2)])
-            similarity.append({'keyword': pair, 'score': score})
-            print count # sanity check for long runs
-            count += 1
-    
-    with open(outfile, 'w') as f:
-        json.dump(similarity, f)
+    # setup sim score hash
+    for i, ds in enumerate(sim_data):
+        pair = ds['keyword']
+        sl_pair = str(sorted([x.lower() for x in pair], key=unicode.lower))
+        sim_scores[sl_pair] = ds['score']
         
+    # calculate similarity between projects
+    # score = the sum of all similarity scores for each pair of keyword words 
+    for proj_pair in list(combinations(dataset, 2))[:max_items]:
+        
+        # a fancy way to get the individual words from all the keywords in a list
+        kw1 = [item for sublist in [x.lower().split() for x in proj_pair[0][kw_field]] for item in sublist]
+        kw2 = [item for sublist in [x.lower().split() for x in proj_pair[1][kw_field]] for item in sublist]
+
+        score = 0.0
+        for word1 in kw1:
+            for word2 in kw2:
+                if word1 == word2:
+                    score += 1.0
+                else:
+                    key = str([word1, word2])
+                    if key in sim_scores:
+                        score += sim_scores[key]
+        
+#         print '%s <=> %s: %d' % (proj_pair[0]['identifier'], proj_pair[1]['identifier'], score)
+        proj_sims.append({'p1': proj_pair[0]['identifier'], 'p2': proj_pair[1]['identifier'], 'score': score})
+        
+        
+        with open(outfile, 'w') as f:
+            json.dump(sorted(proj_sims, key=operator.itemgetter('score'), reverse=True), f)
+
     print 'done'
-    # calculate a score for each pair of projects in the dataset
-    #
-    # score = sum of keyword similarities for all pairs of keywords 
-#     print len(dataset)
-#     print len(single_words)
-#     print similarity
-
-#    [i for i,x in enumerate(testlist) if x == 1]
-
- 
-#     print score
+    
