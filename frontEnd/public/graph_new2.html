@@ -3,6 +3,7 @@
 <head>
     <title>SpaceTag!</title>
     <meta charset="utf-8">
+    <link href="lib/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
     <style>
         body {
@@ -28,19 +29,64 @@
         .ui-dialog {
             opacity: 0.85;
             overflow: scroll;
-            padding-top: 10px
+            padding-top: 4px
         }
 
         .ui-dialog-titlebar {
             opacity: 1;
         }
 
+        .ui-widget-content {
+            background: #efefef;
+        }
+
         #dialog p {
             font-size: 14px;
         }
 
-        #dialog p div {
+        #dialog .dataset-title, #dialog .meta-toggle {
             cursor: pointer;
+        }
+
+        .form-control {
+            width: auto;
+            margin: 10px 5px 5px 10px;
+            display: inline-block;
+        }
+
+        .btn {
+            margin-bottom: 3px;
+        }
+
+        .metadata {
+            display: none;
+            margin: 2px 10px;
+        }
+
+        .meta-item {
+            font-weight: bold;
+            margin-right: 5px
+        }
+
+        .meta-toggle {
+            padding: 0 3px;
+        }
+
+        div.dataset {
+            padding: 3px 5px;
+            font-size: 12px;
+        }
+
+        div.dataset > a:hover {
+            text-decoration: none;
+        }
+
+        #dialog > p > div.dataset:nth-of-type(odd) {
+          background-color: #d9e9ff;
+        }
+
+        #dialog > p > div.dataset:hover {
+            background-color: #dfdfdf;
         }
 
     </style>
@@ -48,6 +94,48 @@
 <body>
 <input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
 <button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
+ <!--<nav class="navbar navbar-inverse navbar-fixed-top">-->
+      <!--<div class="container">-->
+        <!--<div class="navbar-header">-->
+          <!--<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">-->
+            <!--<span class="sr-only">Toggle navigation</span>-->
+            <!--<span class="icon-bar"></span>-->
+            <!--<span class="icon-bar"></span>-->
+            <!--<span class="icon-bar"></span>-->
+          <!--</button>-->
+	       <!--<a class="navbar-brand" href="#">SpaceTag</a>-->
+        <!--</div>-->
+        <!--<div id="navbar" class="collapse navbar-collapse">-->
+          <!--<ul class="nav navbar-nav">-->
+        	<!--<li><input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword" style='margin-top:8px'></li>-->
+        	<!--<li><button onclick='getGraph()' class='btn btn-default' type='button' style='margin-top:8px'>Search</button></li>-->
+        	<!--<li><button onclick='' class='btn btn-default pull-right' type='button' style='margin-top:8px'>Download Results</button></li>-->
+          <!--</ul>-->
+        <!--</div>&lt;!&ndash;/.nav-collapse &ndash;&gt;-->
+      <!--</div>-->
+    <!--</nav>-->
+
+
+ <!--<nav class="navbar navbar-inverse navbar-fixed-top">-->
+      <!--<div class="container">-->
+          <!--<div class="navbar-header">-->
+         <!---->
+	       <!--<a class="navbar-brand" href="#">SpaceTag</a>-->
+        <!--</div>-->
+        <!--<div id="navbar" class="collapse navbar-collapse">-->
+          <!--<ul class="nav navbar-nav">-->
+        	<!--<li><input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword" style='margin: 8px 3px 0 3px'></li>-->
+        	<!--<li><button onclick='getGraph()' class='btn btn-default' type='button' style='margin: 8px 3px 0 3px'>Search</button></li>-->
+        	<!--<li><button onclick='' class='btn btn-default pull-right' type='button' style='margin: 8px 3px 0 3px'>Download Results</button></li>-->
+          <!--</ul>-->
+        <!--</div>-->
+      <!--</div>-->
+    <!--</nav>-->
+
+
+
+
+
 <div id='theGraphContainer'>
 </div>
 
@@ -126,7 +214,7 @@
                     keywords.push(data[ix].kw.toLowerCase());
                 }
 
-                var cluster = '["' + keywords.join('","') + '"]';
+                var cluster = '["' + keywords.join('", "') + '"]';
                 console.log(cluster);
 
                 $.ajax({
@@ -166,15 +254,15 @@
                                         success: function (data) {
                                             var dialog_body = $("#dialog p");
                                             for (var d in data) {
-                                                var dsLine = $('<div id="_' + data[d].identifier + '"></div>');
+                                                var dsLine = $('<div class="dataset" id="_' + data[d].identifier + '"></div>');
                                                 dialog_body.append(dsLine);
 
-                                                var dataset = $("<span id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
+                                                var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
                                                 dataset.click(function () {
                                                     drawKWGraph(data[d].description_ngram_np);
                                                 });
 
-                                                var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '" style="display: none; margin: 2px 10px"></div>');
+                                                var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
                                                 var keys = [
                                                     'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name'
                                                 ];
@@ -190,12 +278,19 @@
 
                                                 for (var key in keys) {
                                                     if (data[d][keys[key]] != undefined) {
-                                                        metadata.append($('<div><span style="font-weight: bold; margin-right: 5px">' + alias[keys[key]] + ':</span><span>' + data[d][keys[key]] + '</span>'));
+                                                        var metaContent;
+                                                        if (keys[key] == 'landingPage'){
+                                                            metaContent = $('<a href="data[d][keys[key]]">' + data[d][keys[key]] + '</a>');
+                                                        } else {
+                                                            metaContent = $('<span>' + data[d][keys[key]] + '</span>');
+                                                        }
+
+                                                        metadata.append($('<div><span class="meta-item"">' + alias[keys[key]] + ':</span></div>').append(metaContent));
                                                     }
                                                 }
 
 
-                                                var meta_toggle = $('<span>+</span>')
+                                                var meta_toggle = $('<span class="meta-toggle">+</span>')
                                                         .click(function () {
                                                             if ($(this).text() == '+') {
                                                                 $(this).text('-');
@@ -210,8 +305,7 @@
 
                                                 $('#_' + data[d].identifier)
                                                         .append(meta_toggle)
-                                                        .append(dataset)
-                                                        .append(metadata);
+                                                        .append(dataset);
 
 
                                                 if (data[d].landingPage != undefined) {
@@ -226,6 +320,8 @@
                                                         $('#_' + data[d].identifier).append(download);
                                                     }
                                                 }
+
+                                                $('#_' + data[d].identifier).append(metadata);
                                             }
                                             $("#dialog").dialog("open");
                                         }
