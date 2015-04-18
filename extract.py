@@ -3,6 +3,7 @@ import json
 from gensim.models.phrases import Phrases
 from textblob import TextBlob
 import cPickle as pickle
+import argparse
 
 
 def parse_input(input_json, input_source=None):
@@ -98,14 +99,35 @@ def kw_set_to_list(dataset):
 
 
 if __name__ == '__main__':
-    input_json = 'data/defense.json'
-    input_source = 'defense.gov/data.json'
-    seed_json = 'data/nasa.json'
-    output_file = 'data/defense_ngram_np2.json'
-    model_output = 'models.pkl'
-    field = 'description_ngram_np'
-    phrase_passes = 5
-    phrase_threshold = 10
+    parser = argparse.ArgumentParser(description='SpaceTag keyword extraction')
+    parser.add_argument('-i', "--input", type=str, default='data.json', help='path to a data.json format file')
+    parser.add_argument('-s', "--source", type=str, default="", help='data source annotation (e.g. data.nasa.gov/data.json')
+    parser.add_argument('-o', "--output", type=str, default='keywords.json', help='path to output the data with extracted keywords')
+    parser.add_argument('-f', "--field", type=str, default='description_ngram_np', help='field in each dataset to store the keywords')
+    parser.add_argument('-m', "--model", type=str, default='models.pkl', help='file to save the pickled phrase extraction models')
+    parser.add_argument('-p', "--passes", type=int, default=5, help="number of phrase extraction passes to make")
+    parser.add_argument('-t', "--threshold", type=int, default=10, help="phrase extraction significance threshold")
+    parser.add_argument("--seed", type=str, default=None, help="path to a data.json to seed the phrase extraction statistics with")
+
+    args = parser.parse_args()
+
+    input_json = args.input
+    input_source = args.source
+    seed_json = args.seed
+    output_file = args.output
+    model_output = args.model
+    field = args.field
+    phrase_passes = args.passes
+    phrase_threshold = args.threshold
+
+    # input_json = 'data/defense.json'
+    # input_source = 'defense.gov/data.json'
+    # seed_json = 'data/nasa.json'
+    # output_file = 'data/defense_ngram_np2.json'
+    # model_output = 'models.pkl'
+    # field = 'description_ngram_np'
+    # phrase_passes = 5
+    # phrase_threshold = 10
 
     # parse input data
     dataset, desc, doc_id = parse_input(input_json, input_source)
