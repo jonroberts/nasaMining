@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <link href="lib/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <style>
         body {
             background: -webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
@@ -109,7 +110,8 @@
         .selection {
             color: #EEE;
             padding: 10px 5px;
-            font-size: 18px
+            font-size: 18px;
+            text-align: center
         }
 
     </style>
@@ -117,13 +119,13 @@
 <body>
 <div class="container">
     <div class="row topRow">
-        <!--<div class="pull-left">-->
-        <div class="col-md-4 searchbox">
+        <div class="col-md-3" style="margin-top: 10px; margin-left: 10px"><img src="img/spacetag.png"></div>
+        <div class="col-md-5 selection-label selection">
+        </div>
+        <div class="pull-right searchbox">
+            <img src="img/ajax-loader.gif" style="display: none">
             <input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
             <button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
-            <img src="img/ajax-loader.gif" style="display: none">
-        </div>
-        <div class="col-md-2 col-md-offset-2 selection-label selection">
         </div>
     </div>
 
@@ -558,17 +560,23 @@
 
                     $('#_' + data[d].identifier)
                             .append(meta_toggle)
-                            .append(dataset);
+                            .append(dataset)
+                            .append($('<i class="icon-search" style="cursor: pointer"></i>').click(function () {
+                                drawKWGraph(data[d].description_ngram_np);
+                            }))
+                            .append($('<span> </span>'));
 
                     if (data[d].landingPage != undefined) {
-                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
+//                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
+                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank><i class="icon-share"></i></a><span> </span>');
                         $('#_' + data[d].identifier).append(docs);
                     }
                     if (data[d].distribution != undefined) {
                         console.log('found dist');
                         if (data[d].distribution[0].downloadURL != undefined) {
                             console.log('found download URL');
-                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
+//                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
+                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank><i class="icon-download-alt"></i></a>');
                             $('#_' + data[d].identifier).append(download);
                         }
                     }
