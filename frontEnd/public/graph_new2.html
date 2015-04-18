@@ -124,6 +124,8 @@
     var width = 1200,
             height = 700;
 
+    var nodeLabelFactor = 3.0;
+
     var color = d3.scale.category20();
 
     var force = d3.layout.force()
@@ -159,8 +161,10 @@
     function drawGraph(query) {
         $('#theGraph').empty();
         $.ajax({
-            url: 'getCoOccuringKWs',
-            data: {'q': query, 'field': 'description_ngram_np'},
+//            url: 'getCoOccuringKWs',
+//            data: {'q': query, 'field': 'description_ngram_np'},
+            url: 'getCoOccuringKWsFlat',
+            data: {'q': query},
             success: function (data) {
                 console.log(data.length);
                 var keywords = [];
@@ -393,7 +397,7 @@
                 .attr('dy', 5)
                 .style('fill', 'tomato')
                 .style('opacity', function (d) {
-                    if (d.num > maxNum / 1.5) {
+                    if (d.num > maxNum / nodeLabelFactor) {
                         return 1;
                     } else {
                         return 0;

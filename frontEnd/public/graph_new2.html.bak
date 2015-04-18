@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SpaceTag!</title>
+    <meta charset="utf-8">
+    <link href="lib/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
+    <style>
+        body {
+            background: -webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
+            background: -moz-linear-gradient(top, #00000c 0%, #0c1a3a 100%);
+            background: linear-gradient(to bottom, #00000c 0%, #0c1a3a 100%);
+            height: 900px;
+        }
+
+        .node {
+            stroke: #fff;
+            stroke-width: 1px;
+            /*fill: url(#radial-gradient) 100%;*/
+        }
+
+        .link {
+            stroke: #fff;
+            stroke-opacity: .5;
+        }
+
+        .ui-dialog {
+            opacity: 0.85;
+            overflow: scroll;
+            padding-top: 4px
+        }
+
+        .ui-dialog-titlebar {
+            opacity: 1;
+        }
+
+        .ui-widget-content {
+            background: #efefef;
+        }
+
+        #dialog p {
+            font-size: 14px;
+        }
+
+        #dialog .dataset-title, #dialog .meta-toggle {
+            cursor: pointer;
+        }
+
+        .form-control {
+            width: auto;
+            margin: 10px 5px 5px 10px;
+            display: inline-block;
+        }
+
+        .btn {
+            margin-bottom: 3px;
+        }
+
+        .metadata {
+            display: none;
+            margin: 2px 10px;
+        }
+
+        .meta-item {
+            font-weight: bold;
+            margin-right: 5px
+        }
+
+        .meta-toggle {
+            padding: 0 3px;
+        }
+
+        div.dataset {
+            padding: 3px 5px;
+            font-size: 12px;
+        }
+
+        div.dataset > a:hover {
+            text-decoration: none;
+        }
+
+        #dialog > p > div.dataset:nth-of-type(odd) {
+            background-color: #d9e9ff;
+        }
+
+        #dialog > p > div.dataset:hover {
+            background-color: #dfdfdf;
+        }
+
+        a.kw-link:hover {
+            cursor: pointer;
+        }
+
+    </style>
+</head>
+<body>
+<input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
+<button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
+
+<div id='theGraphContainer'>
+</div>
+
+<div id="dialog" title="" style="display:none">
+    <p></p>
+</div>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
+<script>
+    $("#dialog").dialog({
+        autoOpen: false,
+        position: {my: "right top", at: "right top"},
+        width: '35%',
+        height: 600,
+        close: function() { $('.node').css("fill", "steelblue"); }
+    });
+
+    var width = 1200,
+            height = 700;
+
+    var color = d3.scale.category20();
+
+    var force = d3.layout.force()
+            .charge(-240)
+            .linkDistance(170)
+            .size([width, height]);
+
+    var zoom = d3.behavior.zoom()
+            .scaleExtent([.1, 10])
+            .on("zoom", zoomed);
+
+    var svg = d3.select("#theGraphContainer").append("svg")
+            .attr('id', 'theGraph')
+            .attr("width", width)
+            .attr("height", height)
+//    .append("g")
+//    .call(d3.behavior.zoom().scaleExtent([.1, 10]).on("zoom", zoomed))
+//  .append("g");
+            .call(zoom);
+
+    var rect = svg.append("rect")
+            .attr("width", width)
+            .attr("height", height)
+            .style("fill", "none")
+            .style("pointer-events", "all");
+
+//    var radialGradient = svg.append("defs")
+//            .append("radialGradient")
+//            .attr("cx", "50%")
+//            .attr("cy", "60%")
+//            .attr("r", "55%")
+//            .attr("fx", "60%")
+////		    .attr("gradientUnits", "objectBoundingBox")
+//            .attr("id", "radial-gradient");
+//
+//    radialGradient.append("stop")
+//            .attr("offset", "0%")
+//            .attr("stop-color", function (d) {
+//                return d3.rgb("#1C5FA5").brighter(1);
+//            });
+//
+//    radialGradient.append("stop")
+//            .attr("offset", "40%")
+//            .attr("stop-color", function (d) {
+//                return "#1C5FA5";
+//            });
+//
+//    radialGradient.append("stop")
+//            .attr("offset", "100%")
+//            .attr("stop-color", function (d) {
+//                return d3.rgb("#1C5FA5").darker(1.75);
+//            });
+//
+//    svg.append("circle")
+//            .attr("cx", 100)
+//            .attr("cy", 100)
+//            .attr("r", 100)
+//            .style("fill", "url(#radial-gradient)");
+//
+//
+//    var radialGradient = svg.append("defs")
+//            .append("radialGradient")
+//            .attr("cx", "50%")
+//            .attr("cy", "60%")
+//            .attr("r", "55%")
+//            .attr("fx", "60%")
+//            .attr("id", "radial-gradient").call(function(gradient) {
+//                gradient.append("stop").attr("offset", "0%").attr('style', 'stop-color:rgb(100,0,100);stop-opacity:1');
+//                gradient.append("stop").attr("offset", "100%").attr('style', 'stop-color:rgb(0,0,100);stop-opacity:1');
+//            });
+
+//    defs.append('svg:linearGradient')
+//  .attr('gradientUnits', 'userSpaceOnUse')
+//  .attr('x1', 0).attr('y1', 0).attr('x2', 20).attr('y2', 0)
+//  .attr('id', 'master').call(
+//      function(gradient) {
+//        gradient.append('svg:stop').attr('offset', '0%').attr('style', 'stop-color:rgb(0,0,0);stop-opacity:1');
+//        gradient.append('svg:stop').attr('offset', '100%').attr('style', 'stop-color:rgb(0,0,0);stop-opacity:0');
+//      });
+
+
+//    var zTranslate = zoom.translate();
+
+//    zoom(svg);
+
+    function zoomed() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+    }
+
+    function getGraph() {
+        var query = $('#kwSearch').val();
+        drawGraph(query);
+    }
+
+    function drawGraph(query) {
+        $('#theGraph').empty();
+        $.ajax({
+            url: 'getCoOccuringKWs',
+            data: {'q': query, 'field': 'description_ngram_np'},
+            success: function (data) {
+                console.log(data.length);
+                var keywords = [];
+                var thresh = data[0].count / 2.;
+                for (var ix in data) {
+                    if (data[ix].count < thresh) break;
+                    keywords.push(data[ix].kw.toLowerCase());
+                }
+
+                var cluster = '["' + keywords.join('", "') + '"]';
+                console.log(cluster);
+
+                $.ajax({
+                    url: 'getEdges',
+                    data: {'kws': cluster, 'field': 'description_ngram_np', 'threshold': -0.9},
+                    success: function (data) {
+                        console.log(data);
+                        var graph = data;
+                        force
+                                .nodes(graph.nodes)
+                                .links(graph.links)
+                                .start();
+
+                        var link = svg.selectAll(".link")
+                                .data(graph.links)
+                                .enter().append("line")
+                                .attr("class", "link")
+                                .style("stroke-width", function (d) {
+                                    return d.value;
+                                });
+
+//                        radialGradient.selectAll('.gradient').data(graph.nodes)
+//                          .enter().append('radialGradient')
+//                          .attr('id', function(d, i) { return 'gradient' + i; })
+//                          .attr('class', 'gradient')
+//                          .attr('xlink:href', '#radial-gradient');
+//                          .attr('gradientTransform', function(d) { return 'translate(' + d[1] + ')'; });
+
+                        var node = svg.selectAll(".node")
+                                .data(graph.nodes)
+                                .enter().append("circle")
+                                .attr("class", "node")
+                                .attr("r", function (d) {
+                                    return Math.log(d.num);
+                                })
+//                                .attr('fill', function(d, i) { return 'url(#gradient' + i + ')'; })
+//                                .attr("fill", "url(#radial-gradient) 100%")
+                                .style("fill", 'steelblue')
+                                .call(force.drag)
+                                .on("click", function (d) {
+                                    $('.node').css("fill", "steelblue");
+                                    $(this).css("fill", d3.rgb("steelblue").darker(1.5));
+
+                                    $("#dialog").dialog("option", "title", d.name);
+                                    $("#dialog p").empty();
+                                    $.ajax({
+                                        url: 'getDatasets',
+                                        data: {'q': d.name, 'field': 'description_ngram_np'},
+                                        success: function (data) {
+                                            var dialog_body = $("#dialog p");
+                                            for (var d in data) {
+                                                var dsLine = $('<div class="dataset" id="_' + data[d].identifier + '"></div>');
+                                                dialog_body.append(dsLine);
+
+                                                var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
+                                                dataset.click(function () {
+                                                    drawKWGraph(data[d].description_ngram_np);
+                                                });
+
+                                                var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
+                                                var keys = [
+                                                    'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name'
+                                                ];
+
+                                                var alias = {
+                                                    'issued': 'Issued',
+                                                    'identifier': 'Identifier',
+                                                    'description_ngram_np': 'Keywords',
+                                                    'description': 'Description',
+                                                    'landingPage': 'URL',
+                                                    'publisher.name': 'Publisher'
+                                                };
+
+                                                for (var key in keys) {
+                                                    if (data[d][keys[key]] != undefined) {
+                                                        var metaContent;
+                                                        if (keys[key] == 'landingPage') {
+                                                            metaContent = $('<a href="'+data[d][keys[key]]+'">' + data[d][keys[key]] + '</a>');
+                                                        } else if (keys[key] == 'description_ngram_np') {
+                                                            metaContent = $('<span>');
+                                                            var kwds = data[d][keys[key]];
+                                                            $(kwds).each(function (i, k) {
+                                                                metaContent.append($('<a class="kw-link">' + k + '</a>').click(function() {
+                                                                    drawGraph(k);
+                                                                }));
+
+                                                                if (i < kwds.length - 1) {
+                                                                    metaContent.append($('<span>, </span>'));
+                                                                }
+                                                            })
+                                                        } else {
+                                                            metaContent = $('<span>' + data[d][keys[key]] + '</span>');
+                                                        }
+
+                                                        metadata.append($('<div><span class="meta-item"">' + alias[keys[key]] + ':</span></div>').append(metaContent));
+                                                    }
+                                                }
+
+                                                var meta_toggle = $('<span class="meta-toggle">+</span>')
+                                                        .click(function () {
+                                                            if ($(this).text() == '+') {
+                                                                $(this).text('-');
+                                                                console.log($("#meta_" + data[d].identifier));
+                                                                $(this).parent().children('.metadata').toggle();
+                                                            } else {
+                                                                $(this).text('+');
+                                                                $(this).parent().children('.metadata').toggle();
+                                                            }
+                                                        });
+
+
+                                                $('#_' + data[d].identifier)
+                                                        .append(meta_toggle)
+                                                        .append(dataset);
+
+
+                                                if (data[d].landingPage != undefined) {
+                                                    var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
+                                                    $('#_' + data[d].identifier).append(docs);
+                                                }
+                                                if (data[d].distribution != undefined) {
+                                                    console.log('found dist');
+                                                    if (data[d].distribution[0].downloadURL != undefined) {
+                                                        console.log('found download URL');
+                                                        var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
+                                                        $('#_' + data[d].identifier).append(download);
+                                                    }
+                                                }
+
+                                                $('#_' + data[d].identifier).append(metadata);
+                                            }
+                                            $("#dialog").dialog("open");
+                                        }
+                                    })
+                                })
+                                .on("dblclick", function (d) {
+                                    drawGraph(d.name)
+                                });
+
+                        node.append("title")
+                                .text(function (d) {
+                                    return d.name;
+                                });
+
+                        force.on("tick", function () {
+                            link.attr("x1", function (d) {
+                                return d.source.x;
+                            })
+                                    .attr("y1", function (d) {
+                                        return d.source.y;
+                                    })
+                                    .attr("x2", function (d) {
+                                        return d.target.x;
+                                    })
+                                    .attr("y2", function (d) {
+                                        return d.target.y;
+                                    });
+
+                            node.attr("cx", function (d) {
+                                return d.x;
+                            })
+                                    .attr("cy", function (d) {
+                                        return d.y;
+                                    });
+                        });
+                    }
+                })
+            }
+        });
+
+    }
+
+    function drawKWGraph(keywords) {
+        console.log(keywords);
+        console.log(JSON.stringify(keywords));
+        $('#theGraph').empty();
+        $.ajax({
+            url: 'getCoOccuringKWsMulti',
+            data: {'kws': JSON.stringify(keywords), 'field': 'description_ngram_np'},
+            success: function (data) {
+                console.log(data.length);
+                var keywords = [];
+                var thresh = data[0].count / 2.;
+                for (var ix in data) {
+                    if (data[ix].count < thresh) break;
+                    keywords.push(data[ix].kw.toLowerCase());
+                }
+
+                var cluster = '["' + keywords.join('","') + '"]';
+                console.log(cluster);
+
+                $.ajax({
+                    url: 'getEdges',
+                    data: {'kws': cluster, 'field': 'description_ngram_np', 'threshold': -0.9},
+                    success: function (data) {
+                        console.log(data);
+                        var graph = data;
+                        force
+                                .nodes(graph.nodes)
+                                .links(graph.links)
+                                .start();
+
+                        var link = svg.selectAll(".link")
+                                .data(graph.links)
+                                .enter().append("line")
+                                .attr("class", "link")
+                                .style("stroke-width", function (d) {
+                                    return d.value;
+                                });
+
+                        var node = svg.selectAll(".node")
+                                .data(graph.nodes)
+                                .enter().append("circle")
+                                .attr("class", "node")
+                                .attr("r", function (d) {
+                                    return Math.log(d.num);
+                                })
+                                .style("fill", 'olive')
+                                .call(force.drag)
+                                .on("click", function (d) {
+                                    $("#dialog").dialog("option", "title", d.name);
+                                    $.ajax({
+                                        url: 'getDatasets',
+                                        data: {'q': d.name, 'field': 'description_ngram_np'},
+                                        success: function (data) {
+                                            var dialog_body = $("#dialog p");
+                                            dialog_body.empty();
+                                            for (var d in data) {
+                                                var dataset = $("<div id='" + data[d].identifier + "'>" + data[d].title + "</div>");
+//                                                var kwds = JSON.stringify(data[d].description_ngram_np);
+                                                dataset.click(function () {
+                                                    drawKWGraph(data[d].description_ngram_np);
+                                                });
+                                                dialog_body.append(dataset);
+                                            }
+                                            $("#dialog").dialog("open");
+                                        }
+                                    })
+                                })
+                                .on("dblclick", function (d) {
+                                    drawGraph(d.name)
+                                });
+
+                        node.append("title")
+                                .text(function (d) {
+                                    return d.name;
+                                });
+
+                        force.on("tick", function () {
+                            link.attr("x1", function (d) {
+                                return d.source.x;
+                            })
+                                    .attr("y1", function (d) {
+                                        return d.source.y;
+                                    })
+                                    .attr("x2", function (d) {
+                                        return d.target.x;
+                                    })
+                                    .attr("y2", function (d) {
+                                        return d.target.y;
+                                    });
+
+                            node.attr("cx", function (d) {
+                                return d.x;
+                            })
+                                    .attr("cy", function (d) {
+                                        return d.y;
+                                    });
+                        });
+                    }
+                })
+            }
+        });
+
+    }
+
+
+</script>
+</body>
+</html>

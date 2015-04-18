@@ -10,6 +10,7 @@ app.get('/', function (req, res) {
 });
 app.get('/getDatasets', docs.getDatasets);
 app.get('/getCoOccuringKWs', docs.getCoOccuringKWs);
+app.get('/getCoOccuringKWsFlat', docs.getCoOccuringKWsFlat);
 app.get('/getCoOccuringKWsMulti', docs.getCoOccuringKWsMulti);
 app.get('/getEdges', docs.getEdges);
 app.get(/^(.+)$/, function(req,res){
