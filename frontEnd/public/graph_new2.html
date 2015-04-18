@@ -118,6 +118,7 @@
         height: 600,
         close: function () {
             $('.node').css("fill", "steelblue");
+            svg.selectAll('.selected-label').remove();
         }
     });
 
@@ -377,6 +378,18 @@
                     $('.node').css("fill", color);
                     $(this).css("fill", d3.rgb(color).darker(1.5));
 
+                    svg.selectAll('.selected-label').remove();
+                    d3.select(this.parentNode).append("text")
+                            .text(function (d2) {
+                                return d2.name;
+                            })
+                            .attr('class', 'selected-label')
+                            .attr('font-family', 'Verdana')
+                            .attr('dx', 12)
+                            .attr('dy', 5)
+                            .style('fill', d3.rgb('tomato'))
+                            .style('font-size', '12px');
+
                     openDialog(d);
                 })
                 .on("dblclick", function (d) {
@@ -390,7 +403,8 @@
 
         var labels = gnodes.each(function (d) {
             if (d.num > maxNum / nodeLabelFactor) {
-                d3.select(this).append("text")
+                d3.select(this)
+                        .append("text")
                         .text(function (d) {
                             return d.name;
                         })
@@ -398,13 +412,7 @@
                         .attr('dx', 12)
                         .attr('dy', 5)
                         .style('fill', 'tomato')
-                        .style('opacity', function (d) {
-                            if (d.num > maxNum / nodeLabelFactor) {
-                                return 1;
-                            } else {
-                                return 0;
-                            }
-                        });
+                        .style('font-size', '12px');
             }
         });
 
