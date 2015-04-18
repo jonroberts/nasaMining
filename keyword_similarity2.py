@@ -21,6 +21,9 @@ if __name__ == '__main__':
         for kw in r["description_ngram_np"]:
             keywords[kw] = sum([token.repvec for token in nlp(kw)])
 
+    kw_vec = pd.DataFrame.from_dict(keywords).T
+    kw_vec.to_pickle('keyword_vec_repr.pkl')
+
     # keys = sorted(keywords.keys())
     keys = keywords.keys()
 
