@@ -8,10 +8,10 @@ exports.getDatasets = function (req, res) {
     var query = req.query.q;
     var using = req.query.field;
     var field = (using == undefined) ? 'keyword' : using;
-    console.log(field);
+    //console.log(field);
     var theQuery = {};
     theQuery[field] = query;
-    console.log(theQuery);
+    //console.log(theQuery);
     var theFields = {
         'title': 1,
         'issued': 1,
@@ -38,8 +38,7 @@ exports.getDatasets = function (req, res) {
             }
         })
     }
-}
-
+};
 
 exports.getEdges = function (req, res) {
     var keywords = JSON.parse(req.query.kws);
@@ -47,9 +46,10 @@ exports.getEdges = function (req, res) {
     var using = req.query.field;
     var field = (using == undefined) ? 'keyword' : using;
 
-    console.log(keywords);
+    var query = {'keyword': {"$in": keywords}, 'count': {'$gt': 1}, 'pmi_doc': {'$gte': +threshold}};
+
     if (field == 'keyword') {
-        db.kw_pair_freq.find({'keyword': {"$in": keywords}, 'count': {'$gt': 1}}, {'_id': 0}, function (err, docs) {
+        db.kw_pair_freq.find(query, {'_id': 0}, function (err, docs) {
             var names = [];
             var nameDict = {};
             var counter = 0;
@@ -76,14 +76,14 @@ exports.getEdges = function (req, res) {
         })
     }
     else {
-        db.nasa_np_strengths_b.find({'keyword': {"$in": keywords}, 'count': {'$gt': 1}}, {'_id': 0}, function (err, docs) {
+        db.nasa_np_strengths_b.find(query, {'_id': 0}, function (err, docs) {
             var names = [];
             var nameDict = {};
             var counter = 0;
             var edges = [];
             for (var dx in docs) {
                 var d = docs[dx];
-                if (d['pmi_doc'] < threshold) continue;
+                //if (d['pmi_doc'] < threshold) continue;
 
                 var t1 = d['keyword'][0];
                 var t2 = d['keyword'][1];
@@ -102,8 +102,7 @@ exports.getEdges = function (req, res) {
             res.send({'nodes': names, 'links': edges});
         })
     }
-
-}
+};
 
 exports.getCoOccuringKWs = function (req, res) {
     var query = req.query.q;
@@ -194,7 +193,7 @@ exports.getCoOccuringKWsFlat = function (req, res) {
             {"source": "http://data.nasa.gov/data.json", "keyword": {"$regex": new RegExp('^' + query, 'i')}},
             {"_id": 0},
             function (err, docs) {
-                console.log(docs);
+                //console.log(docs);
                 if (err || !docs) res.send({'error': 'no documents found: ' + docs});
                 else {
                     var keywords = [];
@@ -220,7 +219,7 @@ exports.getCoOccuringKWsFlat = function (req, res) {
                         return +b.count - a.count;
                     });
 
-                    console.log(results);
+                    //console.log(results);
 
                     res.send(results);
                 }
