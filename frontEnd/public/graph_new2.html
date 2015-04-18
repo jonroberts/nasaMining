@@ -114,6 +114,12 @@
             text-align: center
         }
 
+        label {
+            display: inline-block;
+            width: 5em;
+            font-size: 12px;
+        }
+
     </style>
 </head>
 <body>
@@ -141,15 +147,20 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
 <script>
-    $("#dialog").dialog({
-        autoOpen: false,
-        position: {my: "right top", at: "right top"},
-        width: '35%',
-        height: 600,
-        close: function () {
-            $('.node').css("fill", "steelblue");
-            svg.selectAll('.selected-label').remove();
-        }
+    $(function () {
+        $("#dialog").dialog({
+            autoOpen: false,
+            position: {my: "right top", at: "right top"},
+            width: '35%',
+            height: 600,
+            close: function () {
+                $('.node').css("fill", "steelblue");
+                svg.selectAll('.selected-label').remove();
+            }
+        });
+
+        $(document).tooltip();
+
     });
 
     var width = 1200,
@@ -503,9 +514,6 @@
                     dialog_body.append(dsLine);
 
                     var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
-                    dataset.click(function () {
-                        drawKWGraph(data[d].description_ngram_np);
-                    });
 
                     var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
                     var keys = [
@@ -558,17 +566,22 @@
                                 }
                             });
 
+                    dataset.click(function () {
+                        $(this).parent().children('.meta-toggle').click();
+                    });
+
+
                     $('#_' + data[d].identifier)
                             .append(meta_toggle)
                             .append(dataset)
-                            .append($('<i class="icon-search" style="cursor: pointer"></i>').click(function () {
+                            .append($('<i class="icon-search" style="cursor: pointer" title="Related datasets"></i>').click(function () {
                                 drawKWGraph(data[d].description_ngram_np);
                             }))
                             .append($('<span> </span>'));
 
                     if (data[d].landingPage != undefined) {
 //                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
-                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank><i class="icon-share"></i></a><span> </span>');
+                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank title="Go to dataset"><i class="icon-share"></i></a><span> </span>');
                         $('#_' + data[d].identifier).append(docs);
                     }
                     if (data[d].distribution != undefined) {
@@ -576,7 +589,7 @@
                         if (data[d].distribution[0].downloadURL != undefined) {
                             console.log('found download URL');
 //                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
-                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank><i class="icon-download-alt"></i></a>');
+                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank title="Download dataset"><i class="icon-download-alt"></i></a>');
                             $('#_' + data[d].identifier).append(download);
                         }
                     }
