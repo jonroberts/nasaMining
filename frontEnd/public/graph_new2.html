@@ -401,8 +401,12 @@
                     return d.name;
                 });
 
+        var nLabels = 0;
+        var maxLabels = Math.floor(Math.sqrt(d3.selectAll('.node').size()));
+
         var labels = gnodes.each(function (d) {
-            if (d.num > maxNum / nodeLabelFactor) {
+            if (nLabels < maxLabels && d.num > maxNum / nodeLabelFactor) {
+                nLabels += 1;
                 d3.select(this)
                         .append("text")
                         .text(function (d) {
