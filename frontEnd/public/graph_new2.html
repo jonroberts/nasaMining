@@ -95,17 +95,45 @@
             cursor: pointer;
         }
 
+        /*.row {*/
+        /*padding-left: 10px;*/
+        /*}*/
+
+        .topRow {
+            background: #171717 linear-gradient(to bottom, #000, #171717);
+            border-bottom: 1px solid #2e2e2e;
+            box-shadow: 0 5px 5px rgba(50, 50, 50, 0.25);
+            border-radius: 10px;
+        }
+
+        .selection {
+            color: #EEE;
+            padding: 10px 5px;
+            font-size: 18px
+        }
+
     </style>
 </head>
 <body>
-<input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
-<button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
+<div class="container">
+    <div class="row topRow">
+        <!--<div class="pull-left">-->
+        <div class="col-md-4 searchbox">
+            <input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
+            <button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
+            <img src="img/ajax-loader.gif" style="display: none">
+        </div>
+        <div class="col-md-2 col-md-offset-2 selection-label selection">
+        </div>
+    </div>
 
-<div id='theGraphContainer'>
-</div>
+    <div id='theGraphContainer'>
+    </div>
 
-<div id="dialog" title="" style="display:none">
-    <p></p>
+    <div id="dialog" title="" style="display:none">
+        <p></p>
+    </div>
+
 </div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -160,6 +188,7 @@
     }
 
     function drawGraph(query) {
+        $(".searchbox img").show();
         $('#theGraph').empty();
         $.ajax({
 //            url: 'getCoOccuringKWs',
@@ -197,6 +226,8 @@
                                 });
 
                         drawLabelNodes(graph, link, "steelblue", query);
+
+                        $(".searchbox img").hide();
                     }
                 })
             }
@@ -394,6 +425,12 @@
                 })
                 .on("dblclick", function (d) {
                     drawGraph(d.name)
+                })
+                .on("mouseover", function (d) {
+                    $('.selection').text(d.name)
+                })
+                .on("mouseout", function (d) {
+                    $('.selection').text("")
                 });
 
         node.append("title")
