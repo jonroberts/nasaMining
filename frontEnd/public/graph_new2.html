@@ -91,6 +91,10 @@
             cursor: pointer;
         }
 
+        circle:hover {
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
@@ -111,7 +115,10 @@
         autoOpen: false,
         position: {my: "right top", at: "right top"},
         width: '35%',
-        height: 600
+        height: 600,
+        close: function () {
+            $('.node').css("fill", "steelblue");
+        }
     });
 
     var width = 1200,
@@ -134,51 +141,11 @@
             .attr("height", height)
             .call(zoom);
 
-    var rect = svg.append("rect")
-            .attr("width", width)
-            .attr("height", height)
-            .style("fill", "none")
-            .style("pointer-events", "all");
-//
-//    var colors = ["#FB1108", "#FD150B", "#FA7806", "#FBE426", "#FCFB8F", "#F3F5E7", "#C7E4EA", "#ABD6E6", "#9AD2E1", "#42A1C1", "#1C5FA5", "#172484"];
-//    var colorScale = d3.scale.linear()
-//            .domain([2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 14000, 20000, 30000]) // Temperatures
-//            .range(colors);
-//
-//    var radialGradient = svg.append("defs")
-//            .append("radialGradient").attr("cx", "50%")
-//            .attr("cy", "60%")
-//            .attr("r", "55%")
-//            .attr("fx", "60%")
-//		    .attr("gradientUnits", "objectBoundingBox")
-//            .attr("id", "radial-gradient");
-//
-//    radialGradient.append("stop")
-//            .attr("offset", "0%")
-//            .attr("stop-color", function (d) {
-//                return d3.rgb(colorScale(20000)).brighter(1);
-//            });
-//
-//    radialGradient.append("stop")
-//            .attr("offset", "40%")
-//            .attr("stop-color", function (d) {
-//                return colorScale(20000);
-//            });
-//
-//    radialGradient.append("stop")
-//            .attr("offset", "100%")
-//            .attr("stop-color", function (d) {
-//                return d3.rgb(colorScale(20000)).darker(1.75);
-//            });
-//
-//    svg.append("circle")
-//            .attr("cx", 100)
-//            .attr("cy", 100)
-//            .attr("r", 100)
-//            .style("fill", "url(#radial-gradient)");
-//
-
-    var zTranslate = zoom.translate();
+//    var rect = svg.append("rect")
+//            .attr("width", width)
+//            .attr("height", height)
+//            .style("fill", "none")
+//            .style("pointer-events", "all");
 
     function zoomed() {
         svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
@@ -212,8 +179,7 @@
                     success: function (data) {
                         console.log(data);
                         var graph = data;
-                        force
-                                .nodes(graph.nodes)
+                        force.nodes(graph.nodes)
                                 .links(graph.links)
                                 .start();
 
@@ -225,145 +191,11 @@
                                     return d.value;
                                 });
 
-                        var node = svg.selectAll(".node")
-                                .data(graph.nodes)
-                                .enter().append("circle")
-                                .attr("class", "node")
-                                .attr("r", function (d) {
-                                    return Math.log(d.num);
-                                })
-//                                .style("fill", "url(#radial-gradient) 100%")
-                                .style("fill", 'steelblue')
-
-                                .call(force.drag)
-                                .on("click", function (d) {
-                                    $("#dialog").dialog("option", "title", d.name);
-                                    $("#dialog p").empty();
-                                    $.ajax({
-                                        url: 'getDatasets',
-                                        data: {'q': d.name, 'field': 'description_ngram_np'},
-                                        success: function (data) {
-                                            var dialog_body = $("#dialog p");
-                                            for (var d in data) {
-                                                var dsLine = $('<div class="dataset" id="_' + data[d].identifier + '"></div>');
-                                                dialog_body.append(dsLine);
-
-                                                var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
-                                                dataset.click(function () {
-                                                    drawKWGraph(data[d].description_ngram_np);
-                                                });
-
-                                                var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
-                                                var keys = [
-                                                    'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name'
-                                                ];
-
-                                                var alias = {
-                                                    'issued': 'Issued',
-                                                    'identifier': 'Identifier',
-                                                    'description_ngram_np': 'Keywords',
-                                                    'description': 'Description',
-                                                    'landingPage': 'URL',
-                                                    'publisher.name': 'Publisher'
-                                                };
-
-                                                for (var key in keys) {
-                                                    if (data[d][keys[key]] != undefined) {
-                                                        var metaContent;
-                                                        if (keys[key] == 'landingPage') {
-                                                            metaContent = $('<a href="'+data[d][keys[key]]+'">' + data[d][keys[key]] + '</a>');
-                                                        } else if (keys[key] == 'description_ngram_np') {
-                                                            metaContent = $('<span>');
-                                                            var kwds = data[d][keys[key]];
-                                                            $(kwds).each(function (i, k) {
-                                                                metaContent.append($('<a class="kw-link">' + k + '</a>').click(function() {
-                                                                    drawGraph(k);
-                                                                }));
-
-                                                                if (i < kwds.length - 1) {
-                                                                    metaContent.append($('<span>, </span>'));
-                                                                }
-                                                            })
-                                                        } else {
-                                                            metaContent = $('<span>' + data[d][keys[key]] + '</span>');
-                                                        }
-
-                                                        metadata.append($('<div><span class="meta-item"">' + alias[keys[key]] + ':</span></div>').append(metaContent));
-                                                    }
-                                                }
-
-                                                var meta_toggle = $('<span class="meta-toggle">+</span>')
-                                                        .click(function () {
-                                                            if ($(this).text() == '+') {
-                                                                $(this).text('-');
-                                                                console.log($("#meta_" + data[d].identifier));
-                                                                $(this).parent().children('.metadata').toggle();
-                                                            } else {
-                                                                $(this).text('+');
-                                                                $(this).parent().children('.metadata').toggle();
-                                                            }
-                                                        });
-
-
-                                                $('#_' + data[d].identifier)
-                                                        .append(meta_toggle)
-                                                        .append(dataset);
-
-
-                                                if (data[d].landingPage != undefined) {
-                                                    var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
-                                                    $('#_' + data[d].identifier).append(docs);
-                                                }
-                                                if (data[d].distribution != undefined) {
-                                                    console.log('found dist');
-                                                    if (data[d].distribution[0].downloadURL != undefined) {
-                                                        console.log('found download URL');
-                                                        var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
-                                                        $('#_' + data[d].identifier).append(download);
-                                                    }
-                                                }
-
-                                                $('#_' + data[d].identifier).append(metadata);
-                                            }
-                                            $("#dialog").dialog("open");
-                                        }
-                                    })
-                                })
-                                .on("dblclick", function (d) {
-                                    drawGraph(d.name)
-                                });
-
-                        node.append("title")
-                                .text(function (d) {
-                                    return d.name;
-                                });
-
-                        force.on("tick", function () {
-                            link.attr("x1", function (d) {
-                                return d.source.x;
-                            })
-                                    .attr("y1", function (d) {
-                                        return d.source.y;
-                                    })
-                                    .attr("x2", function (d) {
-                                        return d.target.x;
-                                    })
-                                    .attr("y2", function (d) {
-                                        return d.target.y;
-                                    });
-
-                            node.attr("cx", function (d) {
-                                return d.x;
-                            })
-                                    .attr("cy", function (d) {
-                                        return d.y;
-                                    });
-                        });
+                        drawLabelNodes(graph, link, "steelblue");
                     }
                 })
             }
         });
-
     }
 
     function drawKWGraph(keywords) {
@@ -423,7 +255,6 @@
                                             dialog_body.empty();
                                             for (var d in data) {
                                                 var dataset = $("<div id='" + data[d].identifier + "'>" + data[d].title + "</div>");
-//                                                var kwds = JSON.stringify(data[d].description_ngram_np);
                                                 dataset.click(function () {
                                                     drawKWGraph(data[d].description_ngram_np);
                                                 });
@@ -467,7 +298,218 @@
                 })
             }
         });
+    }
 
+    function drawNodes(graph, link, color) {
+        var node = svg.selectAll(".node")
+                .data(graph.nodes)
+                .enter().append("circle")
+                .attr("class", "node")
+                .attr("r", function (d) {
+                    return Math.log(d.num);
+                })
+                .style("fill", color)
+                .call(force.drag)
+                .on("click", function (d) {
+                    $('.node').css("fill", color);
+                    $(this).css("fill", d3.rgb(color).darker(1.5));
+
+                    openDialog(d);
+                })
+                .on("dblclick", function (d) {
+                    drawGraph(d.name)
+                });
+
+        node.append("title")
+                .text(function (d) {
+                    return d.name;
+                });
+
+        force.on("tick", function () {
+            link.attr("x1", function (d) {
+                return d.source.x;
+            })
+                    .attr("y1", function (d) {
+                        return d.source.y;
+                    })
+                    .attr("x2", function (d) {
+                        return d.target.x;
+                    })
+                    .attr("y2", function (d) {
+                        return d.target.y;
+                    });
+
+            node.attr("cx", function (d) {
+                return d.x;
+            })
+                    .attr("cy", function (d) {
+                        return d.y;
+                    });
+        });
+
+        return node;
+    }
+
+    function drawLabelNodes(graph, link, color) {
+        var maxNum = 0;
+        for (var ix in graph.nodes) {
+            var n = graph.nodes[ix];
+            maxNum = (n.num > maxNum) ? n.num : maxNum;
+        }
+        var gnodes = svg.selectAll('g.gnode')
+                .data(graph.nodes)
+                .enter()
+                .append('g')
+                .classed('gnode', true);
+
+        var node = gnodes.append("circle")
+                .attr("class", "node")
+                .attr("r", function (d) {
+                    return Math.log(d.num);
+                })
+                .style("fill", color)
+                .call(force.drag)
+                .on("click", function (d) {
+                    $('.node').css("fill", color);
+                    $(this).css("fill", d3.rgb(color).darker(1.5));
+
+                    openDialog(d);
+                })
+                .on("dblclick", function (d) {
+                    drawGraph(d.name)
+                });
+
+        node.append("title")
+                .text(function (d) {
+                    return d.name;
+                });
+
+        var labels = gnodes.append("text")
+                .text(function (d) {
+                    return d.name;
+                })
+                .attr('font-family', 'Verdana')
+                .attr('dx', 12)
+                .attr('dy', 5)
+                .style('fill', 'tomato')
+                .style('opacity', function (d) {
+                    if (d.num > maxNum / 1.5) {
+                        return 1;
+                    } else {
+                        return 0;
+                    }
+                });
+
+        force.on("tick", function () {
+            link.attr("x1", function (d) {
+                return d.source.x;
+            })
+                    .attr("y1", function (d) {
+                        return d.source.y;
+                    })
+                    .attr("x2", function (d) {
+                        return d.target.x;
+                    })
+                    .attr("y2", function (d) {
+                        return d.target.y;
+                    });
+
+            gnodes.attr("transform", function (d) {
+                return 'translate(' + [d.x, d.y] + ')';
+            });
+        });
+    }
+
+    function openDialog(d) {
+        $("#dialog").dialog("option", "title", d.name);
+        $("#dialog p").empty();
+        $.ajax({
+            url: 'getDatasets',
+            data: {'q': d.name, 'field': 'description_ngram_np'},
+            success: function (data) {
+                var dialog_body = $("#dialog p");
+                for (var d in data) {
+                    var dsLine = $('<div class="dataset" id="_' + data[d].identifier + '"></div>');
+                    dialog_body.append(dsLine);
+
+                    var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
+                    dataset.click(function () {
+                        drawKWGraph(data[d].description_ngram_np);
+                    });
+
+                    var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
+                    var keys = [
+                        'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name'
+                    ];
+
+                    var alias = {
+                        'issued': 'Issued',
+                        'identifier': 'Identifier',
+                        'description_ngram_np': 'Keywords',
+                        'description': 'Description',
+                        'landingPage': 'URL',
+                        'publisher.name': 'Publisher'
+                    };
+
+                    for (var key in keys) {
+                        if (data[d][keys[key]] != undefined) {
+                            var metaContent;
+                            if (keys[key] == 'landingPage') {
+                                metaContent = $('<a href="' + data[d][keys[key]] + '">' + data[d][keys[key]] + '</a>');
+                            } else if (keys[key] == 'description_ngram_np') {
+                                metaContent = $('<span>');
+                                var kwds = data[d][keys[key]];
+                                $(kwds).each(function (i, k) {
+                                    metaContent.append($('<a class="kw-link">' + k + '</a>').click(function () {
+                                        drawGraph(k);
+                                    }));
+
+                                    if (i < kwds.length - 1) {
+                                        metaContent.append($('<span>, </span>'));
+                                    }
+                                })
+                            } else {
+                                metaContent = $('<span>' + data[d][keys[key]] + '</span>');
+                            }
+
+                            metadata.append($('<div><span class="meta-item"">' + alias[keys[key]] + ':</span></div>').append(metaContent));
+                        }
+                    }
+
+                    var meta_toggle = $('<span class="meta-toggle">+</span>')
+                            .click(function () {
+                                if ($(this).text() == '+') {
+                                    $(this).text('-');
+                                    console.log($("#meta_" + data[d].identifier));
+                                    $(this).parent().children('.metadata').toggle();
+                                } else {
+                                    $(this).text('+');
+                                    $(this).parent().children('.metadata').toggle();
+                                }
+                            });
+
+                    $('#_' + data[d].identifier)
+                            .append(meta_toggle)
+                            .append(dataset);
+
+                    if (data[d].landingPage != undefined) {
+                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
+                        $('#_' + data[d].identifier).append(docs);
+                    }
+                    if (data[d].distribution != undefined) {
+                        console.log('found dist');
+                        if (data[d].distribution[0].downloadURL != undefined) {
+                            console.log('found download URL');
+                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
+                            $('#_' + data[d].identifier).append(download);
+                        }
+                    }
+
+                    $('#_' + data[d].identifier).append(metadata);
+                }
+                $("#dialog").dialog("open");
+            }
+        })
     }
 
 
