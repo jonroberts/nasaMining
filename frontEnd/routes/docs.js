@@ -22,7 +22,8 @@ exports.getDatasets = function (req, res) {
         'description': 1,
         'landingPage': 1,
         'publisher.name': 1,
-        'distribution': 1
+        'distribution': 1,
+        'source': 1
     };
     if (query == undefined) res.send({'error': 'you must pass in a query, of form q='})
     else {

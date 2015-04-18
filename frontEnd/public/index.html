@@ -183,17 +183,26 @@
             .linkDistance(170)
             .size([width, height]);
 
+    var drag = force.drag()
+            .on("dragstart", function () {
+                nodedrag = true;
+            })
+            .on("dragend", function (d) {
+                d3.event.sourceEvent.stopPropagation();
+                nodedrag = false;
+            });
+
     var zoom = d3.behavior.zoom()
             .scaleExtent([.1, 10])
             .on("zoom", zoomed);
 
-//    var svg = d3.select("#theGraphContainer").append("svg")
-//            .attr('id', 'theGraph')
-//            .attr("width", width)
-//            .attr("height", height)
-//            .call(zoom).append("g");
+    //    var svg = d3.select("#theGraphContainer").append("svg")
+    //            .attr('id', 'theGraph')
+    //            .attr("width", width)
+    //            .attr("height", height)
+    //            .call(zoom).append("g");
 
-        var svg = d3.select("#theGraphContainer").append("svg")
+    var svg = d3.select("#theGraphContainer").append("svg")
             .attr('id', 'theGraph')
             .attr("width", width)
             .attr("height", height)
@@ -292,8 +301,7 @@
                     success: function (data) {
                         console.log(data);
                         var graph = data;
-                        force
-                                .nodes(graph.nodes)
+                        force.nodes(graph.nodes)
                                 .links(graph.links)
                                 .start();
 
@@ -383,7 +391,8 @@
                     return Math.log(d.num);
                 })
                 .style("fill", color)
-                .call(force.drag)
+//                .call(force.drag)
+                .call(drag)
                 .on("click", function (d) {
                     $('.node').css("fill", color);
                     $(this).css("fill", d3.rgb(color).darker(1.5));
@@ -483,7 +492,7 @@
 
                     var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
                     var keys = [
-                        'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name'
+                        'issued', 'identifier', 'description_ngram_np', 'description', 'landingPage', 'publisher.name', 'source'
                     ];
 
                     var alias = {
@@ -492,7 +501,8 @@
                         'description_ngram_np': 'Keywords',
                         'description': 'Description',
                         'landingPage': 'URL',
-                        'publisher.name': 'Publisher'
+                        'publisher.name': 'Publisher',
+                        'source': 'Source'
                     };
 
                     for (var key in keys) {
