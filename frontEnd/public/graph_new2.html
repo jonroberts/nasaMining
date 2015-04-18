@@ -196,7 +196,7 @@
                                     return d.value;
                                 });
 
-                        drawLabelNodes(graph, link, "steelblue");
+                        drawLabelNodes(graph, link, "steelblue", query);
                     }
                 })
             }
@@ -355,7 +355,7 @@
         return node;
     }
 
-    function drawLabelNodes(graph, link, color) {
+    function drawLabelNodes(graph, link, color, query) {
         var maxNum = 0;
         for (var ix in graph.nodes) {
             var n = graph.nodes[ix];
@@ -407,6 +407,17 @@
         var labels = gnodes.each(function (d) {
             if (nLabels < maxLabels && d.num > maxNum / nodeLabelFactor) {
                 nLabels += 1;
+                d3.select(this)
+                        .append("text")
+                        .text(function (d) {
+                            return d.name;
+                        })
+                        .attr('font-family', 'Verdana')
+                        .attr('dx', 12)
+                        .attr('dy', 5)
+                        .style('fill', 'tomato')
+                        .style('font-size', '12px');
+            } else if (d.name.toLowerCase().startsWith(query.toLowerCase())) {
                 d3.select(this)
                         .append("text")
                         .text(function (d) {
