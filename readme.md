@@ -35,6 +35,9 @@ An additional 10000 datasets were tagged, from the following agencies and states
 - Texas
 - Vermont
 
+This codebase also contains a visual interface for searching and exploring the datasets using the extracted keywords, which can be found
+in the frontEnd/ directory. The front end uses D3/jQuery, and the backend server is written in node.js.
+
 Instructions - Keyword Extraction
 ---------------------------------
 
