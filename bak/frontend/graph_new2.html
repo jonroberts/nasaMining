@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <link href="lib/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/themes/smoothness/jquery-ui.css">
+    <link href="//netdna.bootstrapcdn.com/font-awesome/3.1.1/css/font-awesome.css" rel="stylesheet">
     <style>
         body {
             background: -webkit-linear-gradient(#00000c 0%, #0c1a3a 100%);
@@ -109,7 +110,14 @@
         .selection {
             color: #EEE;
             padding: 10px 5px;
-            font-size: 18px
+            font-size: 18px;
+            text-align: center
+        }
+
+        label {
+            display: inline-block;
+            width: 5em;
+            font-size: 12px;
         }
 
     </style>
@@ -117,13 +125,13 @@
 <body>
 <div class="container">
     <div class="row topRow">
-        <!--<div class="pull-left">-->
-        <div class="col-md-4 searchbox">
+        <div class="col-md-3" style="margin-top: 10px; margin-left: 10px"><img src="img/spacetag.png"></div>
+        <div class="col-md-5 selection-label selection">
+        </div>
+        <div class="pull-right searchbox">
+            <img src="img/ajax-loader.gif" style="display: none">
             <input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
             <button onclick='getGraph()' class='btn btn-default' type='button'>Search</button>
-            <img src="img/ajax-loader.gif" style="display: none">
-        </div>
-        <div class="col-md-2 col-md-offset-2 selection-label selection">
         </div>
     </div>
 
@@ -139,21 +147,34 @@
 <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
 <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.3/jquery-ui.min.js"></script>
 <script>
-    $("#dialog").dialog({
-        autoOpen: false,
-        position: {my: "right top", at: "right top"},
-        width: '35%',
-        height: 600,
-        close: function () {
-            $('.node').css("fill", "steelblue");
-            svg.selectAll('.selected-label').remove();
-        }
+    var mode = 1;
+
+    $(function () {
+        $("#dialog").dialog({
+            autoOpen: false,
+            position: {my: "right top", at: "right top"},
+            width: '35%',
+            height: 600,
+            close: function () {
+                if (mode == 1) {
+                    $('.node').css("fill", "steelblue");
+                } else {
+                    $('.node').css("fill", "olive");
+                }
+                svg.selectAll('.selected-label').remove();
+            }
+        });
+
+        $(document).tooltip();
+
     });
 
     var width = 1200,
             height = 700;
 
     var nodeLabelFactor = 3.0;
+
+    var nodedrag = false;
 
     var color = d3.scale.category20();
 
@@ -166,7 +187,13 @@
             .scaleExtent([.1, 10])
             .on("zoom", zoomed);
 
-    var svg = d3.select("#theGraphContainer").append("svg")
+//    var svg = d3.select("#theGraphContainer").append("svg")
+//            .attr('id', 'theGraph')
+//            .attr("width", width)
+//            .attr("height", height)
+//            .call(zoom).append("g");
+
+        var svg = d3.select("#theGraphContainer").append("svg")
             .attr('id', 'theGraph')
             .attr("width", width)
             .attr("height", height)
@@ -179,7 +206,9 @@
     //            .style("pointer-events", "all");
 
     function zoomed() {
-        svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        if (!nodedrag) {
+            svg.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+        }
     }
 
     function getGraph() {
@@ -188,11 +217,10 @@
     }
 
     function drawGraph(query) {
+        mode = 1;
         $(".searchbox img").show();
         $('#theGraph').empty();
         $.ajax({
-//            url: 'getCoOccuringKWs',
-//            data: {'q': query, 'field': 'description_ngram_np'},
             url: 'getCoOccuringKWsFlat',
             data: {'q': query},
             success: function (data) {
@@ -235,22 +263,27 @@
     }
 
     function drawKWGraph(keywords) {
-        console.log(keywords);
-        console.log(JSON.stringify(keywords));
+//        console.log(keywords);
+//        console.log(JSON.stringify(keywords));
+        mode = 2;
+        $(".searchbox img").show();
         $('#theGraph').empty();
         $.ajax({
             url: 'getCoOccuringKWsMulti',
             data: {'kws': JSON.stringify(keywords), 'field': 'description_ngram_np'},
             success: function (data) {
                 console.log(data.length);
+                console.log(data);
                 var keywords = [];
-                var thresh = data[0].count / 2.;
+//                var thresh = data[0].count / 2.;
+                var thresh = data[0].count / 3.;
                 for (var ix in data) {
                     if (data[ix].count < thresh) break;
                     keywords.push(data[ix].kw.toLowerCase());
                 }
 
                 var cluster = '["' + keywords.join('","') + '"]';
+                console.log('cluster:');
                 console.log(cluster);
 
                 $.ajax({
@@ -272,64 +305,10 @@
                                     return d.value;
                                 });
 
-                        var node = svg.selectAll(".node")
-                                .data(graph.nodes)
-                                .enter().append("circle")
-                                .attr("class", "node")
-                                .attr("r", function (d) {
-                                    return Math.log(d.num);
-                                })
-                                .style("fill", 'olive')
-                                .call(force.drag)
-                                .on("click", function (d) {
-                                    $("#dialog").dialog("option", "title", d.name);
-                                    $.ajax({
-                                        url: 'getDatasets',
-                                        data: {'q': d.name, 'field': 'description_ngram_np'},
-                                        success: function (data) {
-                                            var dialog_body = $("#dialog p");
-                                            dialog_body.empty();
-                                            for (var d in data) {
-                                                var dataset = $("<div id='" + data[d].identifier + "'>" + data[d].title + "</div>");
-                                                dataset.click(function () {
-                                                    drawKWGraph(data[d].description_ngram_np);
-                                                });
-                                                dialog_body.append(dataset);
-                                            }
-                                            $("#dialog").dialog("open");
-                                        }
-                                    })
-                                })
-                                .on("dblclick", function (d) {
-                                    drawGraph(d.name)
-                                });
+                        drawLabelNodes(graph, link, "olive");
 
-                        node.append("title")
-                                .text(function (d) {
-                                    return d.name;
-                                });
+                        $(".searchbox img").hide();
 
-                        force.on("tick", function () {
-                            link.attr("x1", function (d) {
-                                return d.source.x;
-                            })
-                                    .attr("y1", function (d) {
-                                        return d.source.y;
-                                    })
-                                    .attr("x2", function (d) {
-                                        return d.target.x;
-                                    })
-                                    .attr("y2", function (d) {
-                                        return d.target.y;
-                                    });
-
-                            node.attr("cx", function (d) {
-                                return d.x;
-                            })
-                                    .attr("cy", function (d) {
-                                        return d.y;
-                                    });
-                        });
                     }
                 })
             }
@@ -454,7 +433,7 @@
                         .attr('dy', 5)
                         .style('fill', 'tomato')
                         .style('font-size', '12px');
-            } else if (d.name.toLowerCase().startsWith(query.toLowerCase())) {
+            } else if (query != undefined && d.name.toLowerCase().startsWith(query.toLowerCase())) {
                 d3.select(this)
                         .append("text")
                         .text(function (d) {
@@ -501,9 +480,6 @@
                     dialog_body.append(dsLine);
 
                     var dataset = $("<span class='dataset-title' id='t_" + data[d].identifier + "'>" + data[d].title + " </span>");
-                    dataset.click(function () {
-                        drawKWGraph(data[d].description_ngram_np);
-                    });
 
                     var metadata = $('<div class="metadata" id="meta_' + data[d].identifier + '"></div>');
                     var keys = [
@@ -556,19 +532,28 @@
                                 }
                             });
 
+                    dataset.click(function () {
+                        $(this).parent().children('.meta-toggle').click();
+                    });
+
+
                     $('#_' + data[d].identifier)
                             .append(meta_toggle)
-                            .append(dataset);
+                            .append(dataset)
+                            .append($('<i class="icon-search" style="cursor: pointer" title="Related keywords"></i>').click(function () {
+                                drawKWGraph(data[d].description_ngram_np);
+                            }))
+                            .append($('<span> </span>'));
 
                     if (data[d].landingPage != undefined) {
-                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank>&#10150;</a><span> </span>');
+                        var docs = $(' <a href="' + data[d].landingPage + '" target=_blank title="Go to dataset"><i class="icon-share"></i></a><span> </span>');
                         $('#_' + data[d].identifier).append(docs);
                     }
                     if (data[d].distribution != undefined) {
                         console.log('found dist');
                         if (data[d].distribution[0].downloadURL != undefined) {
                             console.log('found download URL');
-                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank>&#9660;</a>');
+                            var download = $(' <a href="' + data[d].distribution[0].downloadURL + '" target=_blank title="Download dataset"><i class="icon-download-alt"></i></a>');
                             $('#_' + data[d].identifier).append(download);
                         }
                     }

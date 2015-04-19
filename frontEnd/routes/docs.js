@@ -1,17 +1,17 @@
 var mongojs = require("mongojs")({});
 var db = require("mongojs")
     .connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
-    ['datasets', 'keywords', 'kw_pair_freq', 'nasa_np_strengths_b']);
+    ['datasets', 'keywords', 'kw_pair_freq', 'nasa_np_strengths_b', 'related_datasets']);
 
 
 exports.getDatasets = function (req, res) {
     var query = req.query.q;
     var using = req.query.field;
     var field = (using == undefined) ? 'keyword' : using;
-    console.log(field);
+    //console.log(field);
     var theQuery = {};
     theQuery[field] = query;
-    console.log(theQuery);
+    //console.log(theQuery);
     var theFields = {
         'title': 1,
         'issued': 1,
@@ -22,7 +22,8 @@ exports.getDatasets = function (req, res) {
         'description': 1,
         'landingPage': 1,
         'publisher.name': 1,
-        'distribution': 1
+        'distribution': 1,
+        'source': 1
     };
     if (query == undefined) res.send({'error': 'you must pass in a query, of form q='})
     else {
@@ -38,8 +39,7 @@ exports.getDatasets = function (req, res) {
             }
         })
     }
-}
-
+};
 
 exports.getEdges = function (req, res) {
     var keywords = JSON.parse(req.query.kws);
@@ -47,9 +47,10 @@ exports.getEdges = function (req, res) {
     var using = req.query.field;
     var field = (using == undefined) ? 'keyword' : using;
 
-    console.log(keywords);
+    var query = {'keyword': {"$in": keywords}, 'count': {'$gt': 1}, 'pmi_doc': {'$gte': +threshold}};
+
     if (field == 'keyword') {
-        db.kw_pair_freq.find({'keyword': {"$in": keywords}, 'count': {'$gt': 1}}, {'_id': 0}, function (err, docs) {
+        db.kw_pair_freq.find(query, {'_id': 0}, function (err, docs) {
             var names = [];
             var nameDict = {};
             var counter = 0;
@@ -76,14 +77,14 @@ exports.getEdges = function (req, res) {
         })
     }
     else {
-        db.nasa_np_strengths_b.find({'keyword': {"$in": keywords}, 'count': {'$gt': 1}}, {'_id': 0}, function (err, docs) {
+        db.nasa_np_strengths_b.find(query, {'_id': 0}, function (err, docs) {
             var names = [];
             var nameDict = {};
             var counter = 0;
             var edges = [];
             for (var dx in docs) {
                 var d = docs[dx];
-                if (d['pmi_doc'] < threshold) continue;
+                //if (d['pmi_doc'] < threshold) continue;
 
                 var t1 = d['keyword'][0];
                 var t2 = d['keyword'][1];
@@ -102,8 +103,7 @@ exports.getEdges = function (req, res) {
             res.send({'nodes': names, 'links': edges});
         })
     }
-
-}
+};
 
 exports.getCoOccuringKWs = function (req, res) {
     var query = req.query.q;
@@ -194,7 +194,7 @@ exports.getCoOccuringKWsFlat = function (req, res) {
             {"source": "http://data.nasa.gov/data.json", "keyword": {"$regex": new RegExp('^' + query, 'i')}},
             {"_id": 0},
             function (err, docs) {
-                console.log(docs);
+                //console.log(docs);
                 if (err || !docs) res.send({'error': 'no documents found: ' + docs});
                 else {
                     var keywords = [];
@@ -220,7 +220,7 @@ exports.getCoOccuringKWsFlat = function (req, res) {
                         return +b.count - a.count;
                     });
 
-                    console.log(results);
+                    //console.log(results);
 
                     res.send(results);
                 }
@@ -304,3 +304,19 @@ exports.getCoOccuringKWsMulti = function (req, res) {
     }
 
 };
+
+exports.getRelatedDatasets = function (req, res) {
+    var identifier = req.query.identifier;
+
+    db.related_datasets.find({'identifier': identifier}, {'_id': 0}, {"sort": [['sim','desc']]}, function (err, docs) {
+        res.send(docs)
+    })
+};
+
+exports.getDatasetsByIdentifier = function (req, res) {
+    var identifiers = JSON.parse(req.query.ids);
+
+    db.datasets.find({'identifier': {'$in': identifiers}}, {"_id": 0, "landingPage": 1, "title": 1}, function (err, docs) {
+        res.send(docs);
+    });
+}

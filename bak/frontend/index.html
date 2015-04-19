@@ -1,0 +1,96 @@
+<html>
+	<head>
+		<title>The Galaxy of NASA</title>
+		<link href="lib/css/bootstrap.css" rel="stylesheet">
+		<link href="lib/css/bootstrap-responsive.css" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 20px;
+        padding-bottom: 40px;
+      }
+
+      /* Custom container */
+      .container-narrow {
+        margin: 0 auto;
+        max-width: 700px;
+      }
+      .container-narrow > hr {
+        margin: 30px 0;
+      }
+
+      /* Main marketing message and sign up button */
+      .jumbotron {
+        margin: 60px 0;
+        text-align: center;
+      }
+      .jumbotron h1 {
+        font-size: 72px;
+        line-height: 1;
+      }
+      .jumbotron .btn {
+        font-size: 21px;
+        padding: 14px 24px;
+      }
+
+      /* Supporting marketing content */
+      .marketing {
+        margin: 60px 0;
+      }
+      .marketing p + h4 {
+        margin-top: 28px;
+      }
+    </style>
+  	</head>
+	<body>
+	    <!--<div class="navbar navbar-fixed-top">
+	      <div class="navbar-inner">
+	        <div class="container">
+	          <button type="button" class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	            <span class="icon-bar"></span>
+	          </button>
+	          <a class="brand" href="#">NASA Mining</a>
+	          <div class="nav-collapse collapse">
+	            <ul class="nav">
+	              <li class="active"><a href="#">Home</a></li>
+	              <li><a href="#about">About</a></li>
+	              <li><a href="#contact">Contact</a></li>
+	            </ul>
+	          </div>
+	        </div>
+	      </div>
+	    </div>-->
+		<div class='container'>
+			<div class='row'>
+				<div class='span12'>
+					<input class="form-control" type='text' id='kwSearch' placeholder="search for a keyword">
+					<button onclick='search()' class='btn btn-default' type='button'>Search</button>
+				</div>
+			</div>
+			<div class='row'>
+				<div class='span12' id='results'>
+				</div>
+			</div>
+		</div>
+		
+	</body>
+	<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+	<script type="text/javascript">	
+	function search(){
+		$('#results').empty();
+		var kw=$('#kwSearch').val();
+		console.log(kw);
+		$.ajax({
+			url:'getDatasets',
+			data:{'q':kw,'using':'description_textrank_kw'}, // can also use description_textrank_kw, description_bigram_kw, keyword
+			success:function(data){
+				console.log(data);
+				$.each(data,function(ix,el){
+					$('#results').append('<div>'+el.title+'</div>');
+				})
+			}
+		})
+	}
+	</script>
+</html>
