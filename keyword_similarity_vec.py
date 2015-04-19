@@ -24,7 +24,6 @@ if __name__ == '__main__':
     kw_vec = pd.DataFrame.from_dict(keywords).T
     kw_vec.to_pickle('keyword_vec_repr.pkl')
 
-    # keys = sorted(keywords.keys())
     keys = keywords.keys()
 
     # calculate cosine similarity
@@ -40,32 +39,3 @@ if __name__ == '__main__':
     similarity.fillna(0.0, inplace=True)
 
     similarity.to_pickle('keyword_vector_cos_similarity.pkl')
-
-
-    # similarity = pd.DataFrame(index=keys, columns=keys)
-    #
-    # print 'Calculating similarities'
-    #
-    # for i, ki in enumerate(keys):
-    #     print i
-    #     similarity.iloc[i, i + 1:] = [keywords[ki].dot(keywords[kj]) for kj in keys[i + 1:]]
-    #
-    # print 'done'
-    #
-    # similarity.to_pickle('keyword_vector_similarity.pkl')
-
-    # for i, pair in enumerate(combinations(keywords, 2)):
-    #     if i > 0 and i % 1000 == 0:
-    #         print i
-    #
-    #     if i > 1000000:
-    #         break
-    #
-    #     key = sorted(pair, key=unicode.lower)
-    #
-    #     similarity.loc[key[0], key[1]] = keywords[key[0]].dot(keywords[key[1]])
-        # similarity[key[0]][key[1]] = keywords[key[0]].dot(keywords[key[1]])
-        # similarity.append({'keyword': key, 'similarity': float(keywords[key[0]].dot(keywords[key[1]]))})
-
-    # with open('data/keyword_vector_similarity.json', 'w') as f:
-    #     json.dump(similarity, f)

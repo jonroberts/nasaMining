@@ -36,11 +36,11 @@ if __name__ == '__main__':
     # collect project vectors
     print "Collecting project vectors"
     projects = dict()
-    project_urls = dict()
+    # project_urls = dict()
 
     for r in res:
         projects[r['identifier']] = kw_vec.ix[r["description_ngram_np"]]
-        project_urls[r['identifier']] = r.get('landingPage', None)
+        # project_urls[r['identifier']] = r.get('landingPage', None)
 
     # projects = {r["identifier"]: kw_vec.ix[r["description_ngram_np"]] for r in res}
 
