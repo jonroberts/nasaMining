@@ -7,7 +7,66 @@ NASA SpaceApps 2015
 Instructions - Keyword Extraction
 ---------------------------------
 
-**TBD**
+Keyword extraction is performed by running extract.py on a data.json format dataset. 
+The outline for the keyword extraction algorithm is:
+
+1. Multi-word keyphrases are calculated through a variant of pointwise mutual information, 
+as implemented by the Phrases class in the Python package Gensim (<a href="https://radimrehurek.com/gensim/">https://radimrehurek.com/gensim/</a>)
+    1. Multiple passes can be performed over the dataset to extract longer n-gram keywords
+    2. The statistics collected when training the phrase extraction model can be optionally seeded by an additional dataset,
+    to favorably bias the collocation significance scores towards ngrams found in the seed dataset. This was used when extracting
+    keywords on the non-NASA data. Note that keywords will not be extracted from this seed data; it is solely used in the training phase.
+    An additional advantage to using a seed dataset is that it will tend to improve results when processing a smaller dataset with
+    less text to train the phrase extraction with.
+2. Longer keyphrases are not guaranteed to be syntactically sound, so each keyphrase is then tagged with part-of-speech tags,
+and parsed to extract noun phrases. Keywords which consist entirely of proper nouns (NNP/NNPS POS tags) are added in their entirety.
+Keywords which do not contain any noun phrases and are not all proper nouns are discarded.
+
+The options for extract.py are:
+
+    usage: extract.py [-h] [-i INPUT] [-s SOURCE] [-o OUTPUT] [-f FIELD]
+                      [-m MODEL] [-p PASSES] [-t THRESHOLD] [--seed SEED]
+    
+    SpaceTag keyword extraction
+    
+    optional arguments:
+      -h, --help            show this help message and exit
+      -i INPUT, --input INPUT
+                            path to a data.json format file
+      -s SOURCE, --source SOURCE
+                            data source annotation (e.g. data.nasa.gov/data.json
+      -o OUTPUT, --output OUTPUT
+                            path to output the data with extracted keywords
+      -f FIELD, --field FIELD
+                            field in each dataset to store the keywords
+      -m MODEL, --model MODEL
+                            file to save the pickled phrase extraction models
+      -p PASSES, --passes PASSES
+                            number of phrase extraction passes to make
+      -t THRESHOLD, --threshold THRESHOLD
+                            phrase extraction significance threshold
+      --seed SEED           path to a data.json to seed the phrase extraction
+                            statistics with
+
+**Example:**
+
+To generate keywords for NASA's data.json, which we have saved as data/nasa.json, call extract.py like:
+
+    python extract.py --input data/nasa.json --source data.nasa.gov/data.json --output data/nasa_keywords.json --field new_keywords --passes 5 --threshold 10
+     
+This will extract keywords and place them in the field "new_keywords", saving the results to data/nasa_keywords.json. 
+
+The --passes flag specifies that five keyword extraction passes will be performed, resulting in longer keyphrases. 
+The first pass will produce bigram keyphrases, the second will join the bigrams with collocated unigrams and other bigrams (producing tri- and quad-grams), 
+and so on.
+
+The --threshold flag determines how many keyphrases will be initially extracted. The default is 10, with higher values producing fewer keyphrases.
+
+As a second example, to extract keywords from the Department of Defense data.json file (data/defense.json here), and also seed the phrase extraction
+with the descriptions from data/nasa.json, call extract.py like:
+
+    python extract.py --input data/defense.json --source defense.gov/data.json --output data/defense_keywords.json --seed data/nasa.json --field new_keywords --passes 5 --threshold 10
+
 
 Instructions - Related Datasets (Word Embedding Method)
 -------------------------------------------------------
@@ -66,7 +125,7 @@ simply execute the script. The following values are hard coded:
 		input:	data/nasa_kw.json
 		output:	data/keyword_synset_scores.json
 		
-**project_similarty.py**:
+**project_similarity.py**:
 
 This generates a similarty score for every pair of projects based on their keywords. Each individual word from
 the keywords of one project are compared to the words from the keywords in a second project. Scores for each
