@@ -118,7 +118,7 @@ Run keyword_similarity_vec.py to generate the keyword vectors
 
 **project_similarity_vec_centroid.py**
 
-Run project_similarity_vec_centroid.py to calculate the 25 most similar datasets for each dataset based on the cosine similarity between mean keyword vectors.
+Run project_similarity_vec_centroid.py after keyword_similarity_vec.py to calculate the 25 most similar datasets for each dataset based on the cosine similarity between mean keyword vectors.
     
 - Each dataset contains some number of keywords, N, each with their own vector representation of dimension D; in order to simplify the distance calculation 
      between one dataset with a keyword matrix K<sub>1</sub> of dimension N<sub>1</sub> x D, and a second with K<sub>2</sub> of dimension N<sub>2</sub> x D,
