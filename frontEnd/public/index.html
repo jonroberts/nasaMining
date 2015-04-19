@@ -526,9 +526,27 @@
                                 metaContent = $('<span>' + data[d][keys[key]] + '</span>');
                             }
 
-                            metadata.append($('<div><span class="meta-item"">' + alias[keys[key]] + ':</span></div>').append(metaContent));
+                            metadata.append($('<div><span class="meta-item">' + alias[keys[key]] + ':</span></div>').append(metaContent));
                         }
                     }
+
+
+                    $.ajax({
+                        url: 'getRelatedDatasets',
+                        data: {'identifier': data[d].identifier},
+                        success: function (rec_data) {
+                            var related = $('<div><span class="meta-item">Related Datasets:</span></div>');
+                            var identifier;
+                            $(rec_data).each(function(rec, rec_i) {
+                                identifier = rec_i.identifier;
+                                related.append($('<div>'+rec_i.rec+"</div>"));
+                            });
+                            if (identifier != undefined) {
+                                $("#meta_" + identifier).append(related);
+                            }
+                        }
+                    });
+
 
                     var meta_toggle = $('<span class="meta-toggle">+</span>')
                             .click(function () {

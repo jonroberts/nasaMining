@@ -1,7 +1,7 @@
 var mongojs = require("mongojs")({});
 var db = require("mongojs")
     .connect('mongodb://nasahack:hacking4nasa@proximus.modulusmongo.net:27017/tepO9seb',
-    ['datasets', 'keywords', 'kw_pair_freq', 'nasa_np_strengths_b']);
+    ['datasets', 'keywords', 'kw_pair_freq', 'nasa_np_strengths_b', 'related_datasets']);
 
 
 exports.getDatasets = function (req, res) {
@@ -303,4 +303,12 @@ exports.getCoOccuringKWsMulti = function (req, res) {
         })
     }
 
+};
+
+exports.getRelatedDatasets = function (req, res) {
+    var identifier = req.query.identifier;
+
+    db.related_datasets.find({'identifier': identifier}, {'_id': 0}, {"sort": [['sim','desc']]}, function (err, docs) {
+        res.send(docs)
+    })
 };

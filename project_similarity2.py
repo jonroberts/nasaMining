@@ -17,12 +17,12 @@ def calc_sim(proj_keys, p1, i):
     psims = sorted(psims.items(), key=lambda s: s[1], reverse=True)
     if len(psims) > 10:
         psims = psims[:10]
-    sims = defaultdict(list)
-    sims[p1].append(psims)
+    s = defaultdict(list)
+    s[p1].append(psims)
     for p in psims:
-        sims[p[0]].append((p1, p[1]))
+        s[p[0]].append((p1, p[1]))
 
-    return sims
+    return s
 
 if __name__ == '__main__':
     client = MongoClient('proximus.modulusmongo.net:27017')
