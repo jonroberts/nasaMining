@@ -4,6 +4,37 @@ SpaceTag Automatic Keyword Extraction
 NASA SpaceApps 2015
 -------------------
 
+Automatic keyword extraction on data.json schema open data.
+
+This project processes the data.json files released by NASA and other governmental bodies as part of their open data
+initiatives. The metadata descriptions are processed, and relevant, meaningful keywords are algorithmically extracted. 
+These keywords are added back into each record, providing a richer set of tags to search through and connect datasets,
+both within and across organizations.
+
+The central focus was on tagging all ~16000 datasets in NASA's data.json, from <a href="http://data.nasa.gov">data.nasa.gov</a>.
+
+An additional 10000 datasets were tagged, from the following agencies and states:
+
+- Department of Commerce
+- Department of Defense
+- Department of Energy
+- Environmental Protection Agency
+- National Science Foundation
+- State Department
+- USDA
+- Colorado
+- Hawaii
+- Illinois
+- Iowa
+- Maine
+- Maryland
+- Michigan
+- New Jersey
+- New York
+- Oregon
+- Texas
+- Vermont
+
 Instructions - Keyword Extraction
 ---------------------------------
 
