@@ -168,7 +168,7 @@ pair of words are looked up from keyword data produced by the keyword similarty 
 simply summed together. The result is the similarty score between the two projects
 	
 
-Example:	
+**Example:**	
 
 using the 2 projects in example.json
     
