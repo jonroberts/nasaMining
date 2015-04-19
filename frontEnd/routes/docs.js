@@ -312,3 +312,11 @@ exports.getRelatedDatasets = function (req, res) {
         res.send(docs)
     })
 };
+
+exports.getDatasetsByIdentifier = function (req, res) {
+    var identifiers = JSON.parse(req.query.ids);
+
+    db.datasets.find({'identifier': {'$in': identifiers}}, {"_id": 0, "landingPage": 1, "title": 1}, function (err, docs) {
+        res.send(docs);
+    });
+}

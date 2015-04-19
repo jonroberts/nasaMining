@@ -530,17 +530,30 @@
                         }
                     }
 
-
                     $.ajax({
                         url: 'getRelatedDatasets',
                         data: {'identifier': data[d].identifier},
                         success: function (rec_data) {
                             var related = $('<div><span class="meta-item">Related Datasets:</span></div>');
+                            var identifiers = [];
                             var identifier;
-                            $(rec_data).each(function(rec, rec_i) {
+                            $(rec_data).each(function (rec, rec_i) {
                                 identifier = rec_i.identifier;
-                                related.append($('<div>'+rec_i.rec+"</div>"));
+                                identifiers.push(rec_i.rec);
                             });
+
+                            console.log(identifiers);
+
+                            $.ajax({
+                                url: 'getDatasetsByIdentifier',
+                                data: {'ids': JSON.stringify(identifiers)},
+                                success: function (rec_data2) {
+                                    $(rec_data2).each(function (rj, rj_data) {
+                                        related.append($('<div><a href="' + rj_data.landingPage + '">' + rj_data.title + '</a>'));
+                                    })
+                                }
+                            });
+
                             if (identifier != undefined) {
                                 $("#meta_" + identifier).append(related);
                             }

@@ -14,6 +14,7 @@ app.get('/getCoOccuringKWsFlat', docs.getCoOccuringKWsFlat);
 app.get('/getCoOccuringKWsMulti', docs.getCoOccuringKWsMulti);
 app.get('/getEdges', docs.getEdges);
 app.get('/getRelatedDatasets', docs.getRelatedDatasets);
+app.get('/getDatasetsByIdentifier', docs.getDatasetsByIdentifier);
 app.get(/^(.+)$/, function(req,res){
 	res.sendfile('public/' + req.params[0]);
 });
