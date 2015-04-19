@@ -1,0 +1,110 @@
+{
+    "@context": "https://project-open-data.cio.gov/v1.1/schema/catalog.jsonld",
+    "@type": "dcat:Catalog",
+    "conformsTo": "https://project-open-data.cio.gov/v1.1/schema",
+    "describedBy": "https://project-open-data.cio.gov/v1.1/schema/catalog.json",
+    "dataset": [
+        {
+            "@type": "dcat:Dataset",
+            "accessLevel": "public",
+            "accrualPeriodicity": "irregular",
+            "bureauCode": [
+                "026:00"
+            ],
+            "contactPoint": {
+                "@type": "vcard:Contact",
+                "fn": "PLEASE CONTACT ORNL DAAC User Services",
+                "hasEmail": "mailto:ornldaac@ornl.gov"
+            },
+            "description": "ABSTRACT: USGS 15 minute stream flow data for Kings Creek on the Konza Prairie",
+            "distribution": [
+                {
+                    "@type": "dcat:Distribution",
+                    "downloadURL": "http://daac.ornl.gov/cgi-bin/dsviewer.pl?ds_id=1",
+                    "mediaType": "text/html"
+                }
+            ],
+            "identifier": "C179003030-ORNL_DAAC",
+            "issued": "2008-12-02T00:00:00.000Z",
+            "keyword": [
+                "EARTH SCIENCE",
+                "HYDROSPHERE",
+                "SURFACE WATER"
+            ],
+            "landingPage": "http://reverb.echo.nasa.gov/reverb?selected=C179003030-ORNL_DAAC",
+            "language": [
+                "en-US"
+            ],
+            "modified": "2008-12-02T00:00:00.000Z",
+            "programCode": [
+                "026:001"
+            ],
+            "publisher": {
+                "@type": "org:Organization",
+                "name": "National Aeronautics and Space Administration"
+            },
+            "references": [
+                "http://daac.ornl.gov/FIFE/guides/15_min_strm_flow.html"
+            ],
+            "spatial": "39.1, -96.6",
+            "temporal": "1984-12-25T00:00:00.000Z/1988-03-04T00:00:00.000Z",
+            "theme": [
+                "FIFE",
+                "ESIP",
+                "EOSDIS"
+            ],
+            "title": "15 Minute Stream Flow Data: USGS (FIFE)"
+        },
+        {
+        	"@type": "dcat:Dataset",
+            "accessLevel": "public",
+            "rights": "Users are free to use, copy, distribute, transmit, and adapt the work for commercial and non-commercial purposes, without restriction, as long as clear attribution of the source is provided.",
+            "accrualPeriodicity": "irregular",
+            "bureauCode": [
+                "026:00"
+            ],
+            "contactPoint": {
+                "@type": "vcard:Contact",
+                "fn": "SEDAC Services (Socioeconomic Data and Applications Center (SEDAC))",
+                "hasEmail": "mailto:ciesin.info@ciesin.columbia.edu"
+            },
+            "description": "The Anthropogenic Sulfur Dioxide Emissions, 1850-2005: National and Regional Data Set by Source Category, Version 2.86 provides annual estimates of \n\nanthropogenic global and regional sulfur dioxide emissions spanning the period 1850- 2005 using a bottom-up mass balance method, calibrated to country-level inventory data. It includes \n\nemissions by country and by source category (coal, petroleum, and biomass combustion, smelting, fuel processing, and other processes). This dataset is developed at the Pacific Northwest \n\nNational Laboratory (PNNL) and the maps are produced at the Center for International Earth Science Information Network (CIESIN). The data and maps created using the data set are distributed \n\nby CIESIN at Columbia University. (Suggested Usage: To provide annual estimates of anthropogenic global and regional sulfur dioxide emissions in support of climate, atmospheric or other related research.)",
+            "distribution": [
+                {
+                    "@type": "dcat:Distribution",
+                    "downloadURL": "http://sedac.ciesin.columbia.edu/data/set/haso2-anthro-sulfur-dioxide-emissions-1850-2005-v2-86/data-download",
+                    "mediaType": "application/octet-stream"
+                }
+            ],
+            "identifier": "C1000000030-SEDAC__2",
+            "issued": "2013-02-07T00:00:00Z",
+            "keyword": [
+                "EARTH SCIENCE",
+                "ATMOSPHERE",
+                "AIR QUALITY",
+                "ATMOSPHERIC CHEMISTRY"
+            ],
+            "landingPage": "http://reverb.echo.nasa.gov/reverb?selected=C1000000030-SEDAC",
+            "language": [
+                "en-US"
+            ],
+            "modified": "2014-05-14T00:00:00Z",
+            "programCode": [
+                "026:001"
+            ],
+            "publisher": {
+                "@type": "org:Organization",
+                "name": "National Aeronautics and Space Administration"
+            },
+            "references": [
+                "http://dx.doi.org/10.7927/H49884X9"
+            ],
+            "spatial": "-180.0, -90.0, 180.0, 90.0",
+            "temporal": "1850-01-01T00:00:00Z/2005-12-31T00:00:00Z",
+            "theme": [
+                "HASO2"
+            ],
+            "title": "Anthropogenic Sulfur Dioxide Emissions, 1850-2005: National and Regional Data Set by Source Category, Version 2.86"
+        }
+    ]
+}
