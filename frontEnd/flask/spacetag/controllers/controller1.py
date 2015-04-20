@@ -206,6 +206,11 @@ def getDatasets():
     results = db.datasets.find({"description_ngram_np": query}, fields)
     # results = []
 
+    # try:
+    #     results = db.datasets.find({"description_ngram_np": query})
+    # except:
+    #     results = []
+
     if not results:
         response = make_response(json.dumps({'query': query, 'fields': fields}))
         response.headers["Access-Control-Allow-Origin"] = "*"
