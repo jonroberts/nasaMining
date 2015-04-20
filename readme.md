@@ -36,11 +36,11 @@ An additional 10000 datasets were tagged, from the following agencies and states
 - Vermont
 
 This codebase also contains a visual interface for searching and exploring the datasets using the extracted keywords, which can be found
-in the frontEnd/ directory. The front end uses D3/jQuery, and the backend server is written in node.js, with the underlying data
-residing in a MongoDB database.
+in the frontEnd/ directory. The front end uses D3/jQuery, and the backend server is written in node.js (an alternate Python implementation 
+using Flask is also included), with the underlying data residing in a MongoDB database.
 
-Instructions - Keyword Extraction
----------------------------------
+Keyword Extraction
+------------------
 
 Keyword extraction is performed by running extract.py on a data.json format dataset. 
 The outline for the keyword extraction algorithm is:
@@ -103,8 +103,8 @@ with the descriptions from data/nasa.json, call extract.py like:
     python extract.py --input data/defense.json --source defense.gov/data.json --output data/defense_keywords.json --seed data/nasa.json --field new_keywords --passes 5 --threshold 10
 
 
-Instructions - Related Datasets (Word Embedding Method)
--------------------------------------------------------
+Related Datasets (Word Embedding Method)
+----------------------------------------
 
 **keyword_similarity_vec.py**
 
@@ -126,8 +126,8 @@ Run project_similarity_vec_centroid.py after keyword_similarity_vec.py to calcul
      Project similarities are then calculated by taking the cosine distance between each centroid vector.
 - The related datasets will be inserted into a mongo collection
 
-Instructions - Related Datasets (Synsets Method)
-------------------------------------------------
+Related Datasets (Synsets Method)
+---------------------------------
 
 Generating project similiarty scores is a two step process, and there are two scripts that must be run:
 
@@ -155,7 +155,7 @@ keywords
 	
 To run: 
 
-simply execute the script. The following values are hard coded:
+Execute the script. The following values are hard coded:
 		
 		input:	data/nasa_kw.json
 		output:	data/keyword_synset_scores.json
@@ -170,7 +170,7 @@ simply summed together. The result is the similarty score between the two projec
 
 **Example:**	
 
-using the 2 projects in example.json
+Using the 2 projects in example.json
     
 Project 1 contains the keywords "EARTH SCIENCE", "HYDROSPHERE", "SURFACE WATER" and project 2 contains
 "EARTH SCIENCE", "ATMOSPHERE", "AIR QUALITY", "ATMOSPHERIC CHEMISTRY" 
@@ -259,5 +259,5 @@ found, and contribute to the final sum score (all other pairs scored 0):
     (u'hydrosphere', u'science', 0.08333333333333333)
     (u'hydrosphere', u'quality', 0.1)
     
-The final similarity score between these two project is then 2.5444444444444447
+The final similarity score between these two projects is then 2.5444444444444447
 
