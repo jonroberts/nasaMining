@@ -312,56 +312,83 @@
     }
 
     function drawKWGraph(keywords) {
-//        console.log(keywords);
-//        console.log(JSON.stringify(keywords));
         mode = 2;
         $(".searchbox img").show();
         $('#theGraph').empty();
         $.ajax({
-            url: 'getCoOccuringKWsMulti',
-            data: {'kws': JSON.stringify(keywords), 'field': 'description_ngram_np'},
+            url: 'getCoOccuringKWsGraph',
+            data: {'q': JSON.stringify(keywords), 'multi': true, 'threshold': -0.9},
             success: function (data) {
-                console.log(data.length);
                 console.log(data);
-                var keywords = [];
-//                var thresh = data[0].count / 2.;
-                var thresh = data[0].count / 3.;
-                for (var ix in data) {
-                    if (data[ix].count < thresh) break;
-                    keywords.push(data[ix].kw.toLowerCase());
-                }
+                var graph = data;
+                force.nodes(graph.nodes)
+                        .links(graph.links)
+                        .start();
 
-                var cluster = '["' + keywords.join('","') + '"]';
-                console.log('cluster:');
-                console.log(cluster);
+                var link = svg.selectAll(".link")
+                        .data(graph.links)
+                        .enter().append("line")
+                        .attr("class", "link")
+                        .style("stroke-width", function (d) {
+                            return d.value;
+                        });
 
-                $.ajax({
-                    url: 'getEdges',
-                    data: {'kws': cluster, 'field': 'description_ngram_np', 'threshold': -0.9},
-                    success: function (data) {
-                        console.log(data);
-                        var graph = data;
-                        force.nodes(graph.nodes)
-                                .links(graph.links)
-                                .start();
+                drawLabelNodes(graph, link, "olive");
 
-                        var link = svg.selectAll(".link")
-                                .data(graph.links)
-                                .enter().append("line")
-                                .attr("class", "link")
-                                .style("stroke-width", function (d) {
-                                    return d.value;
-                                });
-
-                        drawLabelNodes(graph, link, "olive");
-
-                        $(".searchbox img").hide();
-
-                    }
-                })
+                $(".searchbox img").hide();
             }
         });
     }
+
+//    function drawKWGraph(keywords) {
+//        mode = 2;
+//        $(".searchbox img").show();
+//        $('#theGraph').empty();
+//        $.ajax({
+//            url: 'getCoOccuringKWsMulti',
+//            data: {'kws': JSON.stringify(keywords), 'field': 'description_ngram_np'},
+//            success: function (data) {
+//                console.log(data.length);
+//                console.log(data);
+//                var keywords = [];
+////                var thresh = data[0].count / 2.;
+//                var thresh = data[0].count / 3.;
+//                for (var ix in data) {
+//                    if (data[ix].count < thresh) break;
+//                    keywords.push(data[ix].kw.toLowerCase());
+//                }
+//
+//                var cluster = '["' + keywords.join('","') + '"]';
+//                console.log('cluster:');
+//                console.log(cluster);
+//
+//                $.ajax({
+//                    url: 'getEdges',
+//                    data: {'kws': cluster, 'field': 'description_ngram_np', 'threshold': -0.9},
+//                    success: function (data) {
+//                        console.log(data);
+//                        var graph = data;
+//                        force.nodes(graph.nodes)
+//                                .links(graph.links)
+//                                .start();
+//
+//                        var link = svg.selectAll(".link")
+//                                .data(graph.links)
+//                                .enter().append("line")
+//                                .attr("class", "link")
+//                                .style("stroke-width", function (d) {
+//                                    return d.value;
+//                                });
+//
+//                        drawLabelNodes(graph, link, "olive");
+//
+//                        $(".searchbox img").hide();
+//
+//                    }
+//                })
+//            }
+//        });
+//    }
 
     function drawNodes(graph, link, color) {
         var node = svg.selectAll(".node")

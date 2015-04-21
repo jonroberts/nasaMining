@@ -110,6 +110,7 @@ def getEdges():
 @app.route('/getCoOccuringKWsGraph', methods=['GET', 'POST'])
 def getCoOccuringKWsGraph():
     query = valueFromRequest(key="q", request=request)
+    multi = valueFromRequest(key="multi", request=request, boolean=True)
     threshold = float(valueFromRequest(key="threshold", default=-0.5, request=request))
 
     if not query:
@@ -118,12 +119,21 @@ def getCoOccuringKWsGraph():
         response.headers['Content-Type'] = 'application/json'
         return response
 
+    if multi:
+        try:
+            query = json.loads(query)
+            keyword = {"$in": query}
+        except TypeError:
+            keyword = re.compile(r'^' + query, re.IGNORECASE)
+    else:
+        keyword = re.compile(r'^' + query, re.IGNORECASE)
+
     client = MongoClient('proximus.modulusmongo.net:27017')
     client.tepO9seb.authenticate('nasahack', 'hacking4nasa')
     db = client.tepO9seb
 
     results = db.keywords.find(
-        {"source": "http://data.nasa.gov/data.json", "keyword": re.compile(r'^' + query, re.IGNORECASE)},
+        {"source": "http://data.nasa.gov/data.json", "keyword": keyword},
         {"_id": 0})
 
     if not results:
@@ -186,12 +196,13 @@ def getDatasets():
         return response
 
     fields = {
+        '_id': 0,
         'title': 1,
         'issued': 1,
         'identifier': 1,
         'keyword': 1,
         'description_ngram_np': 1,
-        'title_ngram_np': 1,
+        # 'title_ngram_np': 1,
         'description': 1,
         'landingPage': 1,
         'publisher.name': 1,
@@ -204,23 +215,11 @@ def getDatasets():
     db = client.tepO9seb
 
     results = db.datasets.find({"description_ngram_np": query}, fields)
-    # results = []
-
-    # try:
-    #     results = db.datasets.find({"description_ngram_np": query})
-    # except:
-    #     results = []
 
     if not results:
-        response = make_response(json.dumps({'query': query, 'fields': fields}))
-        response.headers["Access-Control-Allow-Origin"] = "*"
-        response.headers['Content-Type'] = 'application/json'
-        return response
+        results = db.datasets.find({"description_ngram_np": query.upper()}, fields)
 
-    # if not results:
-    #     results = db.datasets.find({"description_ngram_np": query.upper()}, fields)
-
-    response = make_response(json.dumps(results))
+    response = make_response(json.dumps(list(results)))
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers['Content-Type'] = 'application/json'
     return response
@@ -242,7 +241,7 @@ def getRelatedDatasets():
 
     results = db.related_datasets.find({'identifier': identifier}, {'_id': 0}).sort([('sim', -1)])
 
-    response = make_response(json.dumps(results))
+    response = make_response(json.dumps(list(results)))
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers['Content-Type'] = 'application/json'
     return response
@@ -250,7 +249,7 @@ def getRelatedDatasets():
 
 @app.route('/getDatasetsByIdentifier', methods=['GET', 'POST'])
 def getDatasetsByIdentifier():
-    identifiers = valueFromRequest(key="ids", list=True, request=request)
+    identifiers = json.loads(valueFromRequest(key="ids", request=request))
 
     if not identifiers:
         response = make_response(json.dumps({"error": 'you must pass in an identifier'}))
@@ -264,7 +263,7 @@ def getDatasetsByIdentifier():
 
     results = db.datasets.find({'identifier': {'$in': identifiers}}, {'_id': 0, "landingPage": 1, "title": 1})
 
-    response = make_response(json.dumps(results))
+    response = make_response(json.dumps(list(results)))
     response.headers["Access-Control-Allow-Origin"] = "*"
     response.headers['Content-Type'] = 'application/json'
     return response
